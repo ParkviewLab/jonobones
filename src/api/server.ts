@@ -1,10 +1,13 @@
 import Fastify, { type FastifyInstance } from 'fastify';
 import type { Config } from '../config/types.js';
+import type { JoplinContext } from '../joplin/bootstrap.js';
+import { ItemConflictError, ItemNotFoundError, ItemValidationError } from '../joplin/errors.js';
 import { makeAuthHook } from './auth.js';
 import { ApiError, codeForStatus, errorEnvelope } from './errors.js';
+import { registerItemRoutes } from './routes/items.js';
 import { API_VERSION, APP_NAME, VERSION } from '../version.js';
 
-export function buildServer(config: Config): FastifyInstance {
+export function buildServer(config: Config, joplin: JoplinContext | null = null): FastifyInstance {
   const app = Fastify({ logger: false });
 
   app.addHook('onRequest', makeAuthHook(config.api.token ?? ''));
@@ -16,6 +19,18 @@ export function buildServer(config: Config): FastifyInstance {
   app.setErrorHandler(async (error: unknown, _request, reply) => {
     if (error instanceof ApiError) {
       await reply.code(error.statusCode).send(errorEnvelope(error.code, error.message));
+      return;
+    }
+    if (error instanceof ItemNotFoundError) {
+      await reply.code(404).send(errorEnvelope('not_found', error.message));
+      return;
+    }
+    if (error instanceof ItemValidationError) {
+      await reply.code(400).send(errorEnvelope('bad_request', error.message));
+      return;
+    }
+    if (error instanceof ItemConflictError) {
+      await reply.code(409).send(errorEnvelope('conflict', error.message));
       return;
     }
     const fastifyError = error as { statusCode?: unknown; message?: unknown };
@@ -35,6 +50,8 @@ export function buildServer(config: Config): FastifyInstance {
         version: VERSION,
         apiVersion: API_VERSION,
       }));
+
+      if (joplin) registerItemRoutes(v1, joplin);
     },
     { prefix: '/v1' },
   );

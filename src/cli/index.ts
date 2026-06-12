@@ -1,10 +1,10 @@
 import { mkdirSync } from 'node:fs';
 import { parseArgs } from 'node:util';
 import { loadConfig, validateConfigForServe } from '../config/load.js';
-import { AlreadyRunningError, acquireLock, releaseLock } from '../config/lockfile.js';
+import { AlreadyRunningError } from '../config/lockfile.js';
 import { resolveProfileDir } from '../config/profile.js';
 import { ConfigError, type CliFlags } from '../config/types.js';
-import { buildServer, startServer } from '../api/server.js';
+import { startDaemon } from '../daemon.js';
 import { VERSION } from '../version.js';
 
 const USAGE = `jonobones ${VERSION} — a headless, Joplin-sync-compatible knowledge daemon
@@ -65,15 +65,9 @@ async function commandStart(flags: CliFlags): Promise<void> {
   const config = loadConfig({ profileDir, flags });
   validateConfigForServe(config);
 
+  let daemon;
   try {
-    acquireLock(profileDir, {
-      pid: process.pid,
-      port: config.api.port,
-      token: config.api.token!,
-      profile: profileDir,
-      startedAt: new Date().toISOString(),
-      version: VERSION,
-    });
+    daemon = await startDaemon({ profileDir, config });
   } catch (error) {
     if (error instanceof AlreadyRunningError) {
       // By design (plan §2.9): a second invocation is not an error.
@@ -83,27 +77,18 @@ async function commandStart(flags: CliFlags): Promise<void> {
     throw error;
   }
 
-  const app = buildServer(config);
-
   let shuttingDown = false;
   const shutdown = async (signal: string) => {
     if (shuttingDown) return;
     shuttingDown = true;
     console.log(`received ${signal}, shutting down`);
-    await app.close();
-    releaseLock(profileDir);
+    await daemon.stop();
     process.exit(0);
   };
   process.on('SIGINT', () => void shutdown('SIGINT'));
   process.on('SIGTERM', () => void shutdown('SIGTERM'));
 
-  try {
-    const address = await startServer(app, config);
-    console.log(`jonobones ${VERSION} serving ${address}/v1 (profile: ${profileDir})`);
-  } catch (error) {
-    releaseLock(profileDir);
-    throw error;
-  }
+  console.log(`jonobones ${VERSION} serving ${daemon.address}/v1 (profile: ${profileDir})`);
 }
 
 export async function main(argv: string[] = process.argv.slice(2)): Promise<void> {
