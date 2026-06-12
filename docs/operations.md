@@ -45,8 +45,10 @@ launchd logs land in `<profile>/logs/`; systemd logs in
 
 ### Docker
 
+Released images are published to GitHub Container Registry on every
+version tag (`linux/amd64` + `linux/arm64`):
+
 ```sh
-docker build -t jonobones .
 docker run -d -v jonobones-data:/data \
   -p 127.0.0.1:26637:26637 \
   -e JONOBONES_API_TOKEN=$(openssl rand -hex 24) \
@@ -54,8 +56,11 @@ docker run -d -v jonobones-data:/data \
   -e JONOBONES_SYNC_URL=https://your-server \
   -e JONOBONES_SYNC_USERNAME=you \
   -e JONOBONES_SYNC_PASSWORD=… \
-  jonobones
+  ghcr.io/parkviewlab/jonobones:latest
 ```
+
+Tags: `latest`, `X.Y.Z`, `X.Y`. Building locally instead:
+`docker build -t jonobones .`
 
 Inside the container the daemon binds `0.0.0.0`; publish the port back to
 `127.0.0.1` on the host (as above) to keep the localhost-only model.
