@@ -279,24 +279,29 @@ tests await `{"type":"open"}` before triggering the change under test.
 
 ### server-e2ee.test.ts — encryption over the server
 
-Covers the *join-an-already-encrypted-target* path (the
-enable-after-plaintext upgrade lives in the interop tier).
+The daemon enables E2EE; the CLI joins. (Deliberately not driven by
+`joplin e2ee enable` — that command races its own settings flush on
+process exit and intermittently no-ops with exit 0; the join path used
+here is the reliable non-interactive flow, the same one the interop
+tier proves.)
 
-1. **CLI enables E2EE and uploads ciphertext**: `e2ee enable -p` (then
-   `e2ee status` must say Enabled — separating enable failures from
-   sync failures); CLI seeds a secret note; sync until the server
-   observably has the E2EE flag and the note item (`cliSyncUntil`);
-   assert via the server's API: `info.json` has `e2ee: true`, and the
-   note item's raw content has `encryption_applied: 1` with neither
+1. **The daemon enables E2EE and uploads ciphertext**: enable via lib
+   (`generateMasterKeyAndEnableEncryption` — the call a stock client and
+   `jonobones init` make); the app creates a secret note; the daemon
+   syncs; assert via the server's API: `info.json` has `e2ee: true`, and
+   the note item's raw content has `encryption_applied: 1` with neither
    title nor body in plaintext.
-2. **The daemon joins and decrypts**: booted with the shared password in
-   `e2ee.masterPassword`, the daemon syncs (post-sync decryption runs);
-   `/status` shows `e2ee.enabled: true`, `pendingDecryption: 0`;
-   `/search` returns the secret body in plaintext.
-3. **The daemon's uploads are ciphertext; the CLI decrypts them**: the
-   app creates a secret note; the daemon syncs; the item on the server
-   is ciphertext (no plaintext leak); CLI syncs + `e2ee decrypt`; its
-   database holds the plaintext body with `encryption_applied = 0`.
+2. **The official CLI joins with the shared password and decrypts**:
+   `config encryption.masterPassword`, then sync until the CLI's
+   database observably has the note (`cliSyncUntil`), then
+   `e2ee decrypt`; its database holds the plaintext title and body with
+   `encryption_applied = 0`.
+3. **The CLI's own writes are encrypted; the daemon decrypts them**: the
+   CLI creates a secret note; sync until the item reaches the server;
+   the server-side item is ciphertext (no plaintext leak); the daemon
+   syncs (post-sync decryption runs); `/status` shows
+   `e2ee.enabled: true`, `pendingDecryption: 0`; `/search` returns the
+   plaintext body.
 
 ### server-resilience.test.ts — restarts, conflicts, outages
 
