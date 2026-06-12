@@ -75,8 +75,8 @@ export async function startDaemon({
   const retentionMs = config.events.retentionDays * 24 * 60 * 60 * 1000;
   await journal.pruneOlderThan(Date.now() - retentionMs);
   joplin.events = {
-    emit(itemType, itemId, changeType) {
-      void hub.publish({ item_type: itemType, item_id: itemId, change_type: changeType, source: 'api' });
+    async emit(itemType, itemId, changeType) {
+      await hub.publish({ item_type: itemType, item_id: itemId, change_type: changeType, source: 'api' });
     },
   };
 

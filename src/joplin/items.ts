@@ -176,7 +176,7 @@ export async function createItem(ctx: JoplinContext, kind: ItemKind, props: Jopl
 
   const saveOptions = typeof props.id === 'string' ? { isNew: true } : undefined;
   const saved = await saveViaModel(ctx, kind, props, saveOptions);
-  ctx.events?.emit(kind, saved.id as string, 'create');
+  await ctx.events?.emit(kind, saved.id as string, 'create');
   return stripLibMetadata((await loadRaw(ctx, kind, saved.id as string))!);
 }
 
@@ -191,7 +191,7 @@ export async function updateItem(ctx: JoplinContext, kind: ItemKind, id: string,
   }
 
   await saveViaModel(ctx, kind, { ...props, id });
-  ctx.events?.emit(kind, id, 'update');
+  await ctx.events?.emit(kind, id, 'update');
   return stripLibMetadata((await loadRaw(ctx, kind, id))!);
 }
 
@@ -223,7 +223,7 @@ export async function deleteItem(
     // Tags have no deleted_time anywhere in the Joplin schema: tag deletion
     // is always permanent, and untagAll also detaches every note first.
     await ctx.lib.Tag.untagAll(id);
-    ctx.events?.emit('tag', id, 'delete');
+    await ctx.events?.emit('tag', id, 'delete');
     return;
   }
 
@@ -235,7 +235,7 @@ export async function deleteItem(
   }
   // Trash is an update (the item still exists, deleted_time changed);
   // only a permanent delete is a delete.
-  ctx.events?.emit(kind, id, permanent ? 'delete' : 'update');
+  await ctx.events?.emit(kind, id, permanent ? 'delete' : 'update');
 }
 
 export async function restoreItem(ctx: JoplinContext, kind: ItemKind, id: string): Promise<JoplinItem> {
@@ -246,7 +246,7 @@ export async function restoreItem(ctx: JoplinContext, kind: ItemKind, id: string
 
   const modelType = kind === 'note' ? ctx.lib.ModelType.Note : ctx.lib.ModelType.Folder;
   await ctx.lib.restoreItems(modelType, [id], { useRestoreFolder: true });
-  ctx.events?.emit(kind, id, 'update');
+  await ctx.events?.emit(kind, id, 'update');
   return stripLibMetadata((await loadRaw(ctx, kind, id))!);
 }
 
@@ -289,7 +289,7 @@ export async function attachTag(ctx: JoplinContext, tagId: string, noteId: strin
   if (!note) throw new ItemNotFoundError('note', noteId);
   await ctx.lib.Tag.addNote(tagId, noteId);
   // Thin events: the note's tag set changed; clients re-fetch its tags.
-  ctx.events?.emit('note', noteId, 'update');
+  await ctx.events?.emit('note', noteId, 'update');
 }
 
 export async function detachTag(ctx: JoplinContext, tagId: string, noteId: string): Promise<void> {
@@ -298,5 +298,5 @@ export async function detachTag(ctx: JoplinContext, tagId: string, noteId: strin
   const note = await loadRaw(ctx, 'note', noteId);
   if (!note) throw new ItemNotFoundError('note', noteId);
   await ctx.lib.Tag.removeNote(tagId, noteId);
-  ctx.events?.emit('note', noteId, 'update');
+  await ctx.events?.emit('note', noteId, 'update');
 }
