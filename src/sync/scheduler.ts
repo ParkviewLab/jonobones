@@ -25,12 +25,12 @@ export class SyncScheduler {
   private lastResult: string | null = null;
   private lastOk = true;
   private stopped = false;
-  private readonly onCycleComplete: (result: SyncRunResult) => void;
+  private readonly onCycleComplete: (result: SyncRunResult) => void | Promise<void>;
 
   public constructor(
     private readonly runner: SyncRunner | null,
     private readonly intervalSeconds: number,
-    hooks: { onCycleComplete?: (result: SyncRunResult) => void } = {},
+    hooks: { onCycleComplete?: (result: SyncRunResult) => void | Promise<void> } = {},
   ) {
     this.onCycleComplete = hooks.onCycleComplete ?? (() => {});
   }
@@ -61,6 +61,16 @@ export class SyncScheduler {
   private async cycle(): Promise<void> {
     this.lastStartedAt = new Date().toISOString();
     const result = await this.runner!.run();
+
+    // The hook (post-sync event scan, journal pruning) runs BEFORE the
+    // cycle reports complete: /status idle must imply this cycle's events
+    // are journaled. Hook failures are logged, not turned into sync errors.
+    try {
+      await this.onCycleComplete(result);
+    } catch (error) {
+      console.error('post-sync hook failed:', error);
+    }
+
     this.lastCompletedAt = new Date().toISOString();
     this.lastOk = result.ok;
     if (!result.ok) {
@@ -70,7 +80,6 @@ export class SyncScheduler {
     } else {
       this.lastResult = 'ok';
     }
-    this.onCycleComplete(result);
   }
 
   public snapshot(): SchedulerSnapshot {
