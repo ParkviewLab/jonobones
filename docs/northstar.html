@@ -1,0 +1,517 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>jonobones · northstar</title>
+
+  <style>
+    /* =========================================================
+       PALETTE — three colours, chosen once
+         #11140f  deep background     (quiet, daemon-at-rest dark)
+         #191d17  panel surface       (slightly raised cards)
+         #e7e3d6  body off-white      (bone-paper ink)
+         #d9c49a  bone accent         (intents, axiom titles, key terms)
+         #6f9a8d  sage structural     (rules, numerals, sync arrows)
+         #87897f  subdued grey        (meta, secondary text)
+       ========================================================= */
+    :root {
+      --bg:      #11140f;
+      --surface: #191d17;
+      --ink:     #e7e3d6;
+      --bone:    #d9c49a;
+      --sage:    #6f9a8d;
+      --mute:    #87897f;
+      --rule:    #2a2f28;
+
+      --serif: 'Iowan Old Style', 'Apple Garamond', 'Hoefler Text', Garamond, Georgia, serif;
+      --sans:  -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, 'Helvetica Neue', Arial, sans-serif;
+      --mono:  'SF Mono', Menlo, Consolas, monospace;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; }
+
+    html, body {
+      margin: 0;
+      padding: 0;
+      background: var(--bg);
+      color: var(--ink);
+      font-family: var(--sans);
+      font-size: 17px;
+      line-height: 1.65;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+    }
+
+    main, header, footer { position: relative; z-index: 1; }
+
+    .page {
+      max-width: 960px;
+      margin: 0 auto;
+      padding: 0 1.5rem 5rem;
+    }
+
+    .meta {
+      max-width: 960px;
+      margin: 0 auto;
+      padding: 1.4rem 1.5rem 0;
+      color: var(--sage);
+      font-size: 0.78rem;
+      letter-spacing: 0.22em;
+      text-transform: uppercase;
+    }
+
+    /* ── hero ─────────────────────────────────────────────── */
+    .thesis {
+      margin: 4.5rem 0 1.2rem;
+      font-family: var(--serif);
+      font-size: clamp(1.9rem, 4.4vw, 2.9rem);
+      line-height: 1.22;
+      font-weight: 500;
+      max-width: 21ch;
+    }
+    .thesis em {
+      font-style: normal;
+      color: var(--bone);
+    }
+    .lede {
+      color: var(--mute);
+      max-width: 58ch;
+      margin: 0 0 3.5rem;
+    }
+    .lede strong { color: var(--ink); font-weight: 600; }
+
+    /* ── the two intents ──────────────────────────────────── */
+    .intents {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1.1rem;
+    }
+    .intent {
+      position: relative;
+      background: var(--surface);
+      border: 1px solid var(--rule);
+      border-radius: 10px;
+      padding: 1.6rem 1.5rem 1.4rem;
+      overflow: hidden;
+    }
+    .intent:hover { border-color: var(--sage); }
+    .intent .numeral {
+      position: absolute;
+      top: 0.2rem;
+      right: 0.9rem;
+      font-family: var(--serif);
+      font-size: 5.2rem;
+      line-height: 1;
+      color: var(--sage);
+      opacity: 0.16;
+      user-select: none;
+    }
+    .intent h2 {
+      margin: 0 0 0.6rem;
+      font-family: var(--serif);
+      font-size: 1.32rem;
+      font-weight: 600;
+      color: var(--bone);
+      max-width: 18ch;
+    }
+    .intent p {
+      margin: 0;
+      font-size: 0.95rem;
+      color: var(--ink);
+    }
+    .intent p + p { margin-top: 0.7rem; }
+    .intent .kicker {
+      display: block;
+      color: var(--sage);
+      font-size: 0.74rem;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      margin-bottom: 0.9rem;
+    }
+
+    /* ── tension strip ────────────────────────────────────── */
+    .tension {
+      margin: 1.1rem 0 0;
+      border: 1px solid var(--rule);
+      border-radius: 10px;
+      padding: 1.4rem 1.6rem 1.5rem;
+      background: linear-gradient(180deg, rgba(217,196,154,0.05), transparent 60%);
+    }
+    .tension .pull {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      color: var(--sage);
+      font-size: 0.78rem;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      margin-bottom: 0.9rem;
+    }
+    .tension .pull svg { flex: 0 0 auto; }
+    .tension p {
+      margin: 0;
+      font-family: var(--serif);
+      font-size: 1.08rem;
+      line-height: 1.55;
+      max-width: 62ch;
+    }
+    .tension p strong { color: var(--bone); font-weight: 600; }
+
+    /* ── architecture figure ──────────────────────────────── */
+    figure.arch {
+      margin: 4.5rem 0 0;
+      padding: 0;
+    }
+    figure.arch svg { display: block; width: 100%; height: auto; }
+    figure.arch figcaption {
+      margin-top: 0.8rem;
+      color: var(--mute);
+      font-size: 0.85rem;
+      max-width: 64ch;
+    }
+    figure.arch figcaption strong { color: var(--ink); }
+
+    /* ── sections ─────────────────────────────────────────── */
+    section { margin-top: 4.5rem; }
+    .section-title {
+      font-family: var(--serif);
+      font-size: 1.6rem;
+      font-weight: 600;
+      margin: 0 0 0.4rem;
+    }
+    .section-sub {
+      color: var(--mute);
+      font-size: 0.92rem;
+      margin: 0 0 1.6rem;
+      max-width: 60ch;
+    }
+
+    /* ── axioms ───────────────────────────────────────────── */
+    .axioms { display: grid; grid-template-columns: 1fr 1fr; gap: 1.1rem; }
+    .axiom {
+      position: relative;
+      background: var(--surface);
+      border: 1px solid var(--rule);
+      border-radius: 10px;
+      padding: 1.4rem 1.4rem 1.3rem;
+      overflow: hidden;
+    }
+    .axiom:hover { border-color: var(--sage); }
+    .axiom.prime {
+      grid-column: 1 / -1;
+      border-color: rgba(217,196,154,0.45);
+      background: linear-gradient(180deg, rgba(217,196,154,0.06), var(--surface) 55%);
+    }
+    .axiom .numeral {
+      position: absolute;
+      top: 0.1rem;
+      right: 0.8rem;
+      font-family: var(--serif);
+      font-size: 4.4rem;
+      line-height: 1;
+      color: var(--sage);
+      opacity: 0.18;
+      user-select: none;
+    }
+    .axiom h3 {
+      margin: 0 0 0.5rem;
+      font-size: 1.02rem;
+      color: var(--bone);
+      font-weight: 600;
+      letter-spacing: 0.01em;
+      max-width: 28ch;
+    }
+    .axiom p { margin: 0; font-size: 0.92rem; color: var(--ink); }
+    .axiom p + p { margin-top: 0.6rem; }
+    .axiom .prime-tag {
+      display: inline-block;
+      color: var(--bone);
+      border: 1px solid rgba(217,196,154,0.5);
+      border-radius: 999px;
+      font-size: 0.68rem;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      padding: 0.15rem 0.6rem;
+      margin-bottom: 0.8rem;
+    }
+    code {
+      font-family: var(--mono);
+      font-size: 0.86em;
+      color: var(--bone);
+      background: rgba(217,196,154,0.07);
+      border-radius: 4px;
+      padding: 0.08em 0.35em;
+    }
+
+    /* ── what jonobones is not ────────────────────────────── */
+    .nots { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 1.1rem; }
+    .not {
+      border: 1px dashed var(--rule);
+      border-radius: 10px;
+      padding: 1.2rem 1.3rem;
+      color: var(--mute);
+      font-size: 0.92rem;
+    }
+    .not .x {
+      display: block;
+      font-family: var(--serif);
+      font-size: 1.5rem;
+      line-height: 1;
+      color: var(--sage);
+      opacity: 0.7;
+      margin-bottom: 0.6rem;
+    }
+    .not strong { color: var(--ink); font-weight: 600; }
+
+    /* ── footer ───────────────────────────────────────────── */
+    footer {
+      margin-top: 5rem;
+      padding-top: 1.4rem;
+      border-top: 1px solid var(--rule);
+      color: var(--mute);
+      font-size: 0.82rem;
+    }
+    footer a { color: var(--sage); }
+
+    /* ── responsive collapse ──────────────────────────────── */
+    @media (max-width: 760px) {
+      .intents, .axioms, .nots { grid-template-columns: 1fr; }
+      .axiom.prime { grid-column: auto; }
+      .thesis { max-width: none; }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="meta">parkviewlab · jonobones · northstar</div>
+
+  <main class="page">
+
+    <!-- ════════ hero ════════ -->
+    <h1 class="thesis">Two intents, one daemon — and <em>fidelity wins</em>.</h1>
+    <p class="lede">
+      jonobones exists to do two things at once, and <strong>both matter</strong>.
+      The pair below are peers — read them together before reading either alone.
+    </p>
+
+    <!-- ════════ the two intents ════════ -->
+    <div class="intents">
+      <article class="intent">
+        <div class="numeral">1</div>
+        <span class="kicker">open outward</span>
+        <h2>Liberate Joplin-synced knowledge for any local application.</h2>
+        <p>
+          A knowledge base that lives in the Joplin sync ecosystem should be
+          usable as a storage layer by <em>any</em> program — a UI, a script,
+          an agent — without that program embedding Joplin, running Joplin
+          Desktop, or understanding sync, encryption, or SQLite.
+        </p>
+        <p>
+          jonobones is the one process that knows those things, and it serves
+          the result over a boring localhost REST API.
+        </p>
+      </article>
+
+      <article class="intent">
+        <div class="numeral">2</div>
+        <span class="kicker">faithful inward</span>
+        <h2>Be a perfect citizen of the Joplin sync ecosystem.</h2>
+        <p>
+          To every other client on the sync target, a profile managed by
+          jonobones is indistinguishable from one managed by a stock Joplin
+          app.
+        </p>
+        <p>
+          Notes, notebooks, tags, resources, links, <code>user_data</code>,
+          encryption, conflict behavior — all of it round-trips faithfully,
+          forever.
+        </p>
+      </article>
+    </div>
+
+    <!-- ════════ the tension ════════ -->
+    <div class="tension">
+      <div class="pull">
+        <svg width="120" height="14" viewBox="0 0 120 14" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+          <line x1="14" y1="7" x2="50" y2="7" stroke="#6f9a8d" stroke-width="1.4"/>
+          <path d="M14 7 L21 3.5 V10.5 Z" fill="#6f9a8d"/>
+          <line x1="70" y1="7" x2="106" y2="7" stroke="#6f9a8d" stroke-width="1.4"/>
+          <path d="M106 7 L99 3.5 V10.5 Z" fill="#6f9a8d"/>
+          <circle cx="60" cy="7" r="3.2" fill="#d9c49a"/>
+        </svg>
+        the tension is the design
+      </div>
+      <p>
+        The two intents pull against each other in a useful way: the first
+        wants to expose more, more conveniently; the second forbids any
+        convenience that would bend the data model or the sync contract.
+        When they conflict, <strong>fidelity wins</strong> — a less convenient
+        API is acceptable; a profile another Joplin client can't trust is not.
+      </p>
+    </div>
+
+    <!-- ════════ architecture figure: both intents in one picture ════════ -->
+    <figure class="arch">
+      <svg viewBox="0 0 900 240" xmlns="http://www.w3.org/2000/svg" role="img"
+           aria-label="Clients speak HTTP to the jonobones daemon; inside it, a 100% stock Joplin profile; the daemon syncs with any Joplin target.">
+        <!-- clients -->
+        <g font-family="-apple-system, 'Segoe UI', system-ui, sans-serif">
+          <rect x="20" y="62" width="150" height="44" rx="8" fill="none" stroke="#6f9a8d" stroke-width="1.2"/>
+          <text x="95" y="89" text-anchor="middle" fill="#e7e3d6" font-size="14">any local app</text>
+          <rect x="20" y="134" width="150" height="44" rx="8" fill="none" stroke="#6f9a8d" stroke-width="1.2"/>
+          <text x="95" y="161" text-anchor="middle" fill="#e7e3d6" font-size="14">a script, an agent</text>
+
+          <!-- HTTP-only boundary -->
+          <line x1="225" y1="30" x2="225" y2="210" stroke="#d9c49a" stroke-width="1" stroke-dasharray="3 5" opacity="0.7"/>
+          <text x="225" y="226" text-anchor="middle" fill="#d9c49a" font-size="11" letter-spacing="2">HTTP ONLY</text>
+
+          <!-- arrows clients -> daemon -->
+          <line x1="170" y1="84" x2="280" y2="100" stroke="#6f9a8d" stroke-width="1.2"/>
+          <path d="M280 100 L271 96 L273 103 Z" fill="#6f9a8d"/>
+          <line x1="170" y1="156" x2="280" y2="140" stroke="#6f9a8d" stroke-width="1.2"/>
+          <path d="M280 140 L271 144 L273 137 Z" fill="#6f9a8d"/>
+          <text x="222" y="108" text-anchor="middle" fill="#87897f" font-size="11">/v1 · 127.0.0.1</text>
+
+          <!-- daemon -->
+          <rect x="285" y="48" width="330" height="144" rx="12" fill="#191d17" stroke="#d9c49a" stroke-width="1.3"/>
+          <text x="450" y="76" text-anchor="middle" fill="#d9c49a" font-size="15" font-weight="600">jonobones daemon</text>
+
+          <!-- stock profile capsule inside -->
+          <rect x="315" y="92" width="270" height="74" rx="9" fill="none" stroke="#6f9a8d" stroke-width="1.1"/>
+          <text x="450" y="120" text-anchor="middle" fill="#e7e3d6" font-size="13">a 100% stock Joplin client profile</text>
+          <text x="450" y="143" text-anchor="middle" fill="#87897f" font-size="11.5">database.sqlite · resources/ — untouched format</text>
+
+          <!-- sync arrows daemon <-> target -->
+          <line x1="615" y1="105" x2="730" y2="105" stroke="#6f9a8d" stroke-width="1.2"/>
+          <path d="M730 105 L721 101 L723 108 Z" fill="#6f9a8d"/>
+          <line x1="730" y1="135" x2="615" y2="135" stroke="#6f9a8d" stroke-width="1.2"/>
+          <path d="M615 135 L624 131 L622 138 Z" fill="#6f9a8d"/>
+          <text x="672" y="94" text-anchor="middle" fill="#87897f" font-size="11">Joplin sync protocol</text>
+
+          <!-- target -->
+          <rect x="735" y="62" width="145" height="116" rx="8" fill="none" stroke="#6f9a8d" stroke-width="1.2"/>
+          <text x="807" y="92" text-anchor="middle" fill="#e7e3d6" font-size="13.5">any sync target</text>
+          <text x="807" y="115" text-anchor="middle" fill="#87897f" font-size="11">Server · Cloud · files</text>
+          <text x="807" y="133" text-anchor="middle" fill="#87897f" font-size="11">WebDAV · S3 · Dropbox</text>
+          <text x="807" y="158" text-anchor="middle" fill="#d9c49a" font-size="11.5">other Joplin clients
+          </text>
+        </g>
+      </svg>
+      <figcaption>
+        Both intents in one picture: <strong>outward</strong>, clients get
+        the whole knowledge base over localhost HTTP and never touch
+        anything else; <strong>inward</strong>, what jonobones manages is a
+        stock Joplin profile that syncs like any other client — other
+        Joplin apps never know the difference.
+      </figcaption>
+    </figure>
+
+    <!-- ════════ axioms ════════ -->
+    <section>
+      <h2 class="section-title">Axioms</h2>
+      <p class="section-sub">
+        Five commitments derived from the intents. The first is the
+        tiebreak for all the others.
+      </p>
+
+      <div class="axioms">
+        <article class="axiom prime">
+          <div class="numeral">1</div>
+          <span class="prime-tag">prime axiom</span>
+          <h3>Sync fidelity is the prime axiom.</h3>
+          <p>
+            The managed profile stays a 100% stock Joplin client profile:
+            every write goes through <code>@joplin/lib</code>'s model layer
+            — Joplin keeps its bookkeeping in application code, not DB
+            triggers, so raw SQL writes corrupt sync state.
+          </p>
+          <p>
+            Anything jonobones owns for itself — event journal, config,
+            lockfile — lives <em>outside</em> the Joplin profile, never as
+            extra tables or files inside it.
+          </p>
+        </article>
+
+        <article class="axiom">
+          <div class="numeral">2</div>
+          <h3>Clients speak HTTP only.</h3>
+          <p>
+            No client ever touches the SQLite database, the resource files,
+            sync metadata, or encryption keys. If a capability isn't in the
+            API, the answer is to extend the API, not to peek behind it.
+          </p>
+        </article>
+
+        <article class="axiom">
+          <div class="numeral">3</div>
+          <h3>Data plane and control plane are separate.</h3>
+          <p>
+            The REST API serves and mutates <em>knowledge</em>. Provisioning
+            — sync credentials, encryption passwords, tokens, config — is
+            the CLI's job. No config mutation and no secrets over HTTP,
+            ever. (<code>POST /sync</code> is operational, not
+            configuration, and is allowed.)
+          </p>
+        </article>
+
+        <article class="axiom">
+          <div class="numeral">4</div>
+          <h3>Derive, don't fork.</h3>
+          <p>
+            jonobones depends on <code>@joplin/lib</code>, pinned to an
+            exact version, quarantined behind one directory
+            (<code>src/joplin/</code> — the anti-corruption layer). No
+            copied Joplin source, no patched engine. When upstream moves,
+            jonobones re-pins and re-verifies; the interop suite is the
+            gate.
+          </p>
+        </article>
+
+        <article class="axiom">
+          <div class="numeral">5</div>
+          <h3>Built for no particular client.</h3>
+          <p>
+            jonobones knows nothing about the applications that use it.
+            Client-specific conventions (e.g. <code>user_data</code>
+            namespaces) are the client's business; nothing in jonobones'
+            code, API, or docs names or favors one.
+          </p>
+        </article>
+      </div>
+    </section>
+
+    <!-- ════════ what jonobones is not ════════ -->
+    <section>
+      <h2 class="section-title">What jonobones is not</h2>
+      <p class="section-sub">Boundaries are part of the intent.</p>
+
+      <div class="nots">
+        <div class="not">
+          <span class="x">×</span>
+          <strong>Not a Joplin app, fork, or replacement</strong> — and not
+          affiliated with or endorsed by the Joplin project. "Joplin"
+          appears here only to describe compatibility.
+        </div>
+        <div class="not">
+          <span class="x">×</span>
+          <strong>Not a multi-user server.</strong> One daemon, one profile,
+          one machine, localhost only. (Joplin Server already exists.)
+        </div>
+        <div class="not">
+          <span class="x">×</span>
+          <strong>Not a sync service.</strong> It is a <em>client</em> of
+          sync targets, never a target itself.
+        </div>
+      </div>
+    </section>
+
+    <footer>
+      <a href="northstar.md">northstar.md</a> is the canonical source of
+      this document; this page is its presentation. If they ever disagree,
+      the Markdown wins. · <a href="https://github.com/ParkviewLab/jonobones">ParkviewLab/jonobones</a>
+    </footer>
+
+  </main>
+</body>
+</html>
