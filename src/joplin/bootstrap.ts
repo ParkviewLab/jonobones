@@ -48,12 +48,29 @@ export interface LibHandles {
   database: any;
   registry: any;
   SyncTargetRegistry: any;
+  ResourceFetcher: any;
+  BaseItemClass: any;
+  syncInfoUtils: { localSyncInfo: () => any; getEncryptionEnabled: () => boolean };
+  e2eeUtils: {
+    loadMasterKeysFromSettings: (service: any) => Promise<void>;
+    masterPasswordIsValid: (password: string, activeMasterKey?: any) => Promise<boolean>;
+    getDefaultMasterKey: () => any;
+  };
   libVersion: string;
+}
+
+/* eslint-disable @typescript-eslint/no-explicit-any -- lib boundary */
+export interface JoplinServices {
+  encryptionService: any;
+  revisionService: any;
+  decryptionWorker: any;
+  resourceFetcher: any | null;
 }
 /* eslint-enable @typescript-eslint/no-explicit-any */
 
 export interface JoplinContext {
   lib: LibHandles;
+  services: JoplinServices;
   /** The stock Joplin client profile dir: <jonobones profile>/joplin */
   joplinProfileDir: string;
   shutdown(): Promise<void>;
@@ -106,6 +123,9 @@ export async function bootstrapJoplin({ profileDir }: BootstrapOptions): Promise
   const shim = req('@joplin/lib/shim.js').default;
   const SearchEngine = req('@joplin/lib/services/search/SearchEngine.js').default;
   const { setItemUserData, getItemUserData, deleteItemUserData } = req('@joplin/lib/models/utils/userData.js');
+  const ResourceFetcher = req('@joplin/lib/services/ResourceFetcher.js').default;
+  const { localSyncInfo, getEncryptionEnabled } = req('@joplin/lib/services/synchronizer/syncInfoUtils.js');
+  const { loadMasterKeysFromSettings, masterPasswordIsValid, getDefaultMasterKey } = req('@joplin/lib/services/e2ee/utils.js');
   const JoplinDatabase = req('@joplin/lib/JoplinDatabase.js').default;
   const { DatabaseDriverNode } = req('@joplin/lib/database-driver-node.js');
   const SyncTargetRegistry = req('@joplin/lib/SyncTargetRegistry.js').default;
@@ -218,11 +238,23 @@ export async function bootstrapJoplin({ profileDir }: BootstrapOptions): Promise
     database,
     registry: reg,
     SyncTargetRegistry,
+    ResourceFetcher,
+    BaseItemClass: BaseItem,
+    syncInfoUtils: { localSyncInfo, getEncryptionEnabled },
+    e2eeUtils: { loadMasterKeysFromSettings, masterPasswordIsValid, getDefaultMasterKey },
     libVersion,
+  };
+
+  const services = {
+    encryptionService,
+    revisionService,
+    decryptionWorker,
+    resourceFetcher: null,
   };
 
   return {
     lib,
+    services,
     joplinProfileDir,
     async shutdown() {
       await ItemChange.waitForAllSaved();

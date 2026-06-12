@@ -9,9 +9,14 @@ import { registerItemRoutes } from './routes/items.js';
 import { registerUserDataRoutes } from './routes/userdata.js';
 import { registerResourceRoutes } from './routes/resources.js';
 import { registerExtraRoutes } from './routes/extras.js';
+import { registerServiceRoutes, type ServiceDeps } from './routes/service.js';
 import { API_VERSION, APP_NAME, VERSION } from '../version.js';
 
-export function buildServer(config: Config, joplin: JoplinContext | null = null): FastifyInstance {
+export function buildServer(
+  config: Config,
+  joplin: JoplinContext | null = null,
+  service: ServiceDeps | null = null,
+): FastifyInstance {
   // maxParamLength: userdata namespace/key segments are up to 255 chars
   // (Joplin's limit); Fastify's default of 100 would 404 them.
   const app = Fastify({ logger: false, maxParamLength: 512 });
@@ -65,6 +70,7 @@ export function buildServer(config: Config, joplin: JoplinContext | null = null)
         registerUserDataRoutes(v1, joplin);
         registerResourceRoutes(v1, joplin);
         registerExtraRoutes(v1, joplin);
+        if (service) registerServiceRoutes(v1, joplin, service);
       }
     },
     { prefix: '/v1' },

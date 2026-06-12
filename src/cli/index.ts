@@ -5,6 +5,8 @@ import { AlreadyRunningError } from '../config/lockfile.js';
 import { resolveProfileDir } from '../config/profile.js';
 import { ConfigError, type CliFlags } from '../config/types.js';
 import { startDaemon } from '../daemon.js';
+import { commandInit } from './commands/init.js';
+import { commandStatus, commandStop, commandSync } from './commands/control.js';
 import { VERSION } from '../version.js';
 
 const USAGE = `jonobones ${VERSION} — a headless, Joplin-sync-compatible knowledge daemon
@@ -12,7 +14,11 @@ const USAGE = `jonobones ${VERSION} — a headless, Joplin-sync-compatible knowl
 usage: jonobones <command> [options]
 
 commands:
+  init                  interactive setup: sync target, first sync, E2EE, token
   start                 run the daemon in the foreground
+  stop                  stop the daemon for this profile
+  status                show daemon + sync + e2ee status
+  sync                  trigger a sync cycle now
 
 options:
   --profile <name|path> profile to use (default: "default")
@@ -21,8 +27,7 @@ options:
   --help                show this help
   --version             show version
 
-Further commands (init, stop, status, sync, service) arrive in upcoming
-milestones.`;
+service install/uninstall arrives in a later milestone.`;
 
 interface ParsedCli {
   command: string | undefined;
@@ -110,9 +115,18 @@ export async function main(argv: string[] = process.argv.slice(2)): Promise<void
     return;
   }
 
-  if (parsed.command === 'start') {
+  const commands: Record<string, (flags: typeof parsed.flags) => Promise<void>> = {
+    start: commandStart,
+    init: commandInit,
+    stop: commandStop,
+    status: commandStatus,
+    sync: commandSync,
+  };
+
+  const command = commands[parsed.command];
+  if (command) {
     try {
-      await commandStart(parsed.flags);
+      await command(parsed.flags);
     } catch (error) {
       if (error instanceof ConfigError) {
         console.error(`config error: ${error.message}`);
