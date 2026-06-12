@@ -1,0 +1,144 @@
+import { mkdirSync } from 'node:fs';
+import { parseArgs } from 'node:util';
+import { loadConfig, validateConfigForServe } from '../config/load.js';
+import { AlreadyRunningError, acquireLock, releaseLock } from '../config/lockfile.js';
+import { resolveProfileDir } from '../config/profile.js';
+import { ConfigError, type CliFlags } from '../config/types.js';
+import { buildServer, startServer } from '../api/server.js';
+import { VERSION } from '../version.js';
+
+const USAGE = `jonobones ${VERSION} — a headless, Joplin-sync-compatible knowledge daemon
+
+usage: jonobones <command> [options]
+
+commands:
+  start                 run the daemon in the foreground
+
+options:
+  --profile <name|path> profile to use (default: "default")
+  --port <port>         override api.port
+  --bind <address>      override api.bind
+  --help                show this help
+  --version             show version
+
+Further commands (init, stop, status, sync, service) arrive in upcoming
+milestones.`;
+
+interface ParsedCli {
+  command: string | undefined;
+  flags: CliFlags;
+  help: boolean;
+  version: boolean;
+}
+
+export function parseCli(argv: string[]): ParsedCli {
+  const { values, positionals } = parseArgs({
+    args: argv,
+    allowPositionals: true,
+    options: {
+      profile: { type: 'string' },
+      port: { type: 'string' },
+      bind: { type: 'string' },
+      token: { type: 'string' },
+      help: { type: 'boolean', default: false },
+      version: { type: 'boolean', default: false },
+    },
+  });
+
+  const flags: CliFlags = {};
+  if (values.profile !== undefined) flags.profile = values.profile;
+  if (values.bind !== undefined) flags.bind = values.bind;
+  if (values.token !== undefined) flags.token = values.token;
+  if (values.port !== undefined) {
+    const port = parseInt(values.port, 10);
+    if (Number.isNaN(port)) throw new ConfigError(`--port must be a number, got ${JSON.stringify(values.port)}`);
+    flags.port = port;
+  }
+
+  return { command: positionals[0], flags, help: values.help, version: values.version };
+}
+
+async function commandStart(flags: CliFlags): Promise<void> {
+  const profileDir = resolveProfileDir(flags.profile);
+  mkdirSync(profileDir, { recursive: true, mode: 0o700 });
+
+  const config = loadConfig({ profileDir, flags });
+  validateConfigForServe(config);
+
+  try {
+    acquireLock(profileDir, {
+      pid: process.pid,
+      port: config.api.port,
+      token: config.api.token!,
+      profile: profileDir,
+      startedAt: new Date().toISOString(),
+      version: VERSION,
+    });
+  } catch (error) {
+    if (error instanceof AlreadyRunningError) {
+      // By design (plan §2.9): a second invocation is not an error.
+      console.log(`jonobones is already running on port ${error.lock.port} (pid ${error.lock.pid})`);
+      process.exit(0);
+    }
+    throw error;
+  }
+
+  const app = buildServer(config);
+
+  let shuttingDown = false;
+  const shutdown = async (signal: string) => {
+    if (shuttingDown) return;
+    shuttingDown = true;
+    console.log(`received ${signal}, shutting down`);
+    await app.close();
+    releaseLock(profileDir);
+    process.exit(0);
+  };
+  process.on('SIGINT', () => void shutdown('SIGINT'));
+  process.on('SIGTERM', () => void shutdown('SIGTERM'));
+
+  try {
+    const address = await startServer(app, config);
+    console.log(`jonobones ${VERSION} serving ${address}/v1 (profile: ${profileDir})`);
+  } catch (error) {
+    releaseLock(profileDir);
+    throw error;
+  }
+}
+
+export async function main(argv: string[] = process.argv.slice(2)): Promise<void> {
+  let parsed: ParsedCli;
+  try {
+    parsed = parseCli(argv);
+  } catch (error) {
+    console.error((error as Error).message);
+    process.exit(2);
+  }
+
+  if (parsed.version) {
+    console.log(VERSION);
+    return;
+  }
+  if (parsed.help || parsed.command === undefined || parsed.command === 'help') {
+    console.log(USAGE);
+    if (parsed.command === undefined && !parsed.help) process.exitCode = 2;
+    return;
+  }
+
+  if (parsed.command === 'start') {
+    try {
+      await commandStart(parsed.flags);
+    } catch (error) {
+      if (error instanceof ConfigError) {
+        console.error(`config error: ${error.message}`);
+        process.exit(1);
+      }
+      throw error;
+    }
+    return;
+  }
+
+  console.error(`unknown command: ${parsed.command}\n`);
+  console.error(USAGE);
+  process.exit(2);
+}
