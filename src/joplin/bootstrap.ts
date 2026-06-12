@@ -55,6 +55,7 @@ export interface LibHandles {
     loadMasterKeysFromSettings: (service: any) => Promise<void>;
     masterPasswordIsValid: (password: string, activeMasterKey?: any) => Promise<boolean>;
     getDefaultMasterKey: () => any;
+    generateMasterKeyAndEnableEncryption: (service: any, password: string) => Promise<any>;
   };
   libVersion: string;
 }
@@ -135,7 +136,12 @@ export async function bootstrapJoplin({ profileDir }: BootstrapOptions): Promise
   const { setItemUserData, getItemUserData, deleteItemUserData } = req('@joplin/lib/models/utils/userData.js');
   const ResourceFetcher = req('@joplin/lib/services/ResourceFetcher.js').default;
   const { localSyncInfo, getEncryptionEnabled } = req('@joplin/lib/services/synchronizer/syncInfoUtils.js');
-  const { loadMasterKeysFromSettings, masterPasswordIsValid, getDefaultMasterKey } = req('@joplin/lib/services/e2ee/utils.js');
+  const {
+    loadMasterKeysFromSettings,
+    masterPasswordIsValid,
+    getDefaultMasterKey,
+    generateMasterKeyAndEnableEncryption,
+  } = req('@joplin/lib/services/e2ee/utils.js');
   const JoplinDatabase = req('@joplin/lib/JoplinDatabase.js').default;
   const { DatabaseDriverNode } = req('@joplin/lib/database-driver-node.js');
   const SyncTargetRegistry = req('@joplin/lib/SyncTargetRegistry.js').default;
@@ -223,6 +229,7 @@ export async function bootstrapJoplin({ profileDir }: BootstrapOptions): Promise
   decryptionWorker.setEncryptionService(encryptionService);
   DecryptionWorker.instance_ = decryptionWorker;
   KvStore.instance().setDb(database);
+  decryptionWorker.setKvStore(KvStore.instance());
   SearchEngine.instance().setDb(database);
   setRSA(RSA);
 
@@ -251,7 +258,12 @@ export async function bootstrapJoplin({ profileDir }: BootstrapOptions): Promise
     ResourceFetcher,
     BaseItemClass: BaseItem,
     syncInfoUtils: { localSyncInfo, getEncryptionEnabled },
-    e2eeUtils: { loadMasterKeysFromSettings, masterPasswordIsValid, getDefaultMasterKey },
+    e2eeUtils: {
+      loadMasterKeysFromSettings,
+      masterPasswordIsValid,
+      getDefaultMasterKey,
+      generateMasterKeyAndEnableEncryption,
+    },
     libVersion,
   };
 

@@ -31,3 +31,25 @@ jobs:
 
       - name: Test
         run: npm test
+
+  # The load-bearing proof of the product: round-trips against the OFFICIAL
+  # joplin CLI over a shared filesystem sync target, plaintext and E2EE.
+  interop:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 24.x
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Install the official joplin CLI
+        run: npm install -g joplin
+
+      - name: Interop round-trip suite
+        run: npm run test:interop

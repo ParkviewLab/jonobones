@@ -37,7 +37,8 @@
     "typecheck": "tsc --noEmit",
     "lint": "eslint .",
     "test": "vitest run",
-    "spike": "node spike/lib-spike.mjs run"
+    "spike": "node spike/lib-spike.mjs run",
+    "test:interop": "vitest run tests/interop"
   },
   "dependencies": {
     "@fastify/multipart": "^10.0.0",
