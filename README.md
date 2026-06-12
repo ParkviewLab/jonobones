@@ -39,15 +39,34 @@ curl http://127.0.0.1:26637/v1/health
 # {"app":"jonobones","version":"…","apiVersion":1}
 ```
 
+Or run the published container image instead — configuration comes in
+entirely through `JONOBONES_*` environment variables, and the profile
+lives in the `/data` volume:
+
+```sh
+docker run -d --name jonobones \
+  -v jonobones-data:/data \
+  -p 127.0.0.1:26637:26637 \
+  -e JONOBONES_API_TOKEN=$(openssl rand -hex 24) \
+  -e JONOBONES_SYNC_TARGET=joplinServer \
+  -e JONOBONES_SYNC_URL=https://your-joplin-server \
+  -e JONOBONES_SYNC_USERNAME=you@example.com \
+  -e JONOBONES_SYNC_PASSWORD=… \
+  ghcr.io/parkviewlab/jonobones:latest
+```
+
+If the sync target is a Joplin Server, `JONOBONES_SYNC_URL` must be the
+same canonical URL the server declares as its `APP_BASE_URL` — Joplin
+Server rejects API calls arriving under any other hostname. See
+[docs/operations.md](docs/operations.md) for details and other targets.
+
 All endpoints except `GET /health` require the API token, either as
 `Authorization: Bearer <token>` or `?token=<token>` (the latter exists for
 `EventSource`/SSE clients). The token, port, and profile path are written to
 `lock.json` in the profile directory (mode 0600) for local discovery.
 
 Run it under your service manager with `jonobones service install`
-(launchd on macOS, systemd on Linux), or in Docker via
-`ghcr.io/parkviewlab/jonobones` — every config key is overridable via
-`JONOBONES_*` environment variables.
+(launchd on macOS, systemd on Linux).
 
 ## Smoke test
 

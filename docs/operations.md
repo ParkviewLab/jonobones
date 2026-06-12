@@ -72,6 +72,15 @@ Tags: `latest`, `X.Y.Z`, `X.Y`. Building locally instead:
 Inside the container the daemon binds `0.0.0.0`; publish the port back to
 `127.0.0.1` on the host (as above) to keep the localhost-only model.
 
+When the sync target is a Joplin Server, `JONOBONES_SYNC_URL` must be the
+same canonical URL the server declares as its `APP_BASE_URL`: Joplin
+Server rejects API requests arriving under any other hostname with
+`404 Invalid origin` (only `localhost`/`127.0.0.1` are treated as
+interchangeable). In a compose setup that means pointing jonobones at
+the server's public URL — not at an internal container alias the server
+doesn't know about. If sync errors with `Invalid origin`, fix
+`APP_BASE_URL` on the server or the URL on the client; they must agree.
+
 ## Configuration
 
 `<profile>/config.json5` is canonical; precedence is
