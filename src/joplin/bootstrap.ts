@@ -70,11 +70,13 @@ export interface JoplinServices {
 /* eslint-enable @typescript-eslint/no-explicit-any */
 
 export interface ItemEventSink {
+  /** Resolves once the event is durably in the journal — API handlers await
+   *  this, so an HTTP response guarantees the event exists. */
   emit(
     itemType: 'note' | 'notebook' | 'tag' | 'resource',
     itemId: string,
     changeType: 'create' | 'update' | 'delete',
-  ): void;
+  ): Promise<void>;
 }
 
 export interface JoplinContext {
