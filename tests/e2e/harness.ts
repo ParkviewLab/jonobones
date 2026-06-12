@@ -96,6 +96,37 @@ export function createClient(base: string, token: string): DaemonClient {
   };
 }
 
+/**
+ * Run `joplin sync` until a postcondition holds. The official CLI prints
+ * "Completed" and exits 0 even when a sync silently did nothing (verified
+ * against a dead server: no failure marker on stdout, exit 0), so the only
+ * reliable contract is the observable outcome. Used where a silently
+ * no-op'd CLI sync would poison everything downstream.
+ */
+export async function cliSyncUntil(
+  cli: { sync(): string },
+  check: () => Promise<boolean>,
+  opts: { attempts?: number; delayMs?: number } = {},
+): Promise<void> {
+  const attempts = opts.attempts ?? 4;
+  const delayMs = opts.delayMs ?? 1500;
+  let lastError: unknown;
+  for (let i = 0; i < attempts; i++) {
+    if (i > 0) await new Promise((r) => setTimeout(r, delayMs));
+    try {
+      cli.sync();
+    } catch (error) {
+      lastError = error; // keep retrying; the check decides
+    }
+    try {
+      if (await check()) return;
+    } catch (error) {
+      lastError = error;
+    }
+  }
+  throw new Error(`joplin CLI sync did not converge after ${attempts} attempts`, { cause: lastError });
+}
+
 export async function freePort(): Promise<number> {
   return new Promise((resolve, reject) => {
     const srv = createServer();
