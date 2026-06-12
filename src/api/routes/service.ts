@@ -6,8 +6,7 @@ import type { SyncScheduler } from '../../sync/scheduler.js';
 export interface ServiceDeps {
   scheduler: SyncScheduler;
   syncSpec: SyncTargetSpec | null;
-  /** M5 fills these from the event journal. */
-  eventsStatus?: () => { oldestId: number | null; newestId: number | null };
+  eventsStatus?: () => Promise<{ oldestId: number | null; newestId: number | null }>;
 }
 
 export function registerServiceRoutes(v1: FastifyInstance, ctx: JoplinContext, deps: ServiceDeps): void {
@@ -21,7 +20,7 @@ export function registerServiceRoutes(v1: FastifyInstance, ctx: JoplinContext, d
       sync: { ...deps.scheduler.snapshot(), ...sync },
       e2ee,
       profile,
-      events: deps.eventsStatus ? deps.eventsStatus() : { oldestId: null, newestId: null },
+      events: deps.eventsStatus ? await deps.eventsStatus() : { oldestId: null, newestId: null },
     };
   });
 

@@ -102,6 +102,7 @@ export async function putKey(
   validateNamespaceAndKey(ns, key);
   await loadEnvelope(ctx, kind, id);
   await ctx.lib.setItemUserData(modelTypeFor(ctx, kind), id, ns, key, value);
+  ctx.events?.emit(kind, id, 'update');
   return { value };
 }
 
@@ -115,4 +116,5 @@ export async function deleteKey(
   validateNamespaceAndKey(ns, key);
   await loadEnvelope(ctx, kind, id);
   await ctx.lib.deleteItemUserData(modelTypeFor(ctx, kind), id, ns, key);
+  ctx.events?.emit(kind, id, 'update');
 }

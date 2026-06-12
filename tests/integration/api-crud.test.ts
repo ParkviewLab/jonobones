@@ -17,6 +17,7 @@ beforeAll(async () => {
     api: { port: 0, bind: '127.0.0.1', token: TOKEN },
     sync: { target: 'none', interval: 0 },
     e2ee: {},
+    events: { retentionDays: 30 },
   };
   daemon = await startDaemon({ profileDir, config, writeLock: false });
   base = `http://127.0.0.1:${daemon.port}/v1`;
