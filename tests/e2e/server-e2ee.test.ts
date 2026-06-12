@@ -10,7 +10,7 @@ import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { startDaemon, type DaemonHandle } from '../../src/daemon.js';
 import { JoplinCli, readProfileDb, resolveJoplinCli } from '../interop/helpers.js';
 import { runApp, type AppEnv } from './app.js';
-import { createClient, serverConfig, type DaemonClient } from './harness.js';
+import { cliSyncUntil, createClient, serverConfig, type DaemonClient } from './harness.js';
 import { ADMIN_EMAIL, ADMIN_PASSWORD, hasDocker, startJoplinServer, type JoplinServerHandle } from './server.js';
 
 const CLI_BIN = resolveJoplinCli();
@@ -60,7 +60,11 @@ describe.skipIf(!CLI_BIN || !DOCKER)('e2e: E2EE over a Joplin Server', () => {
     cli.run('use', 'secret-book');
     cli.run('mknote', 'secret-note');
     cli.run('set', 'secret-note', 'body', CLI_SECRET);
-    cli.sync();
+
+    // Pinpoint enable-vs-sync if this ever fails again: the CLI must
+    // consider E2EE on before any sync runs. (Don't assert on the legacy
+    // master_keys table — modern Joplin keeps keys in the sync info.)
+    expect(cli.run('e2ee', 'status')).toContain('Encryption is: Enabled');
 
     const db = await readProfileDb(join(cli.profileDir, 'database.sqlite'));
     try {
@@ -69,6 +73,18 @@ describe.skipIf(!CLI_BIN || !DOCKER)('e2e: E2EE over a Joplin Server', () => {
     } finally {
       await db.close();
     }
+
+    // Sync until the server observably has the E2EE flag and the note item
+    // (a plain cli.sync() can silently no-op — see cliSyncUntil).
+    await cliSyncUntil(cli, async () => {
+      try {
+        if (JSON.parse(await server.api.getItemContent('info.json')).e2ee.value !== true) return false;
+        await server.api.getItemContent(`${cliNoteId}.md`);
+        return true;
+      } catch {
+        return false;
+      }
+    });
 
     const infoJson = JSON.parse(await server.api.getItemContent('info.json'));
     expect(infoJson.e2ee.value).toBe(true);
