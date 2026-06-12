@@ -1,12 +1,14 @@
 name: Release image
 
-# Publishes ghcr.io/parkviewlab/jonobones on every version tag.
-# workflow_dispatch exists to (re)publish an existing tag — e.g. a tag cut
-# before this workflow existed.
+# Publishes ghcr.io/parkviewlab/jonobones AND the npm package on every
+# version tag. workflow_dispatch exists to (re)publish an existing tag —
+# e.g. a tag cut before this workflow existed.
 #
-# npm publishing is deliberately NOT automated: that is the owner's manual
-# step. ghcr can be automatic because it authenticates with the repo's own
-# GITHUB_TOKEN — no managed secrets.
+# Neither job stores long-lived secrets: the image job authenticates with
+# the repo's GITHUB_TOKEN, the npm job uses npm trusted publishing (OIDC).
+# One-time setup for npm: the package's first version must be published
+# manually, then the trusted publisher (this repo + release.yml, allowed
+# action: publish) is configured at npmjs.com → jonobones → Settings.
 
 on:
   push:
@@ -18,14 +20,13 @@ on:
         required: true
         type: string
 
-permissions:
-  contents: read
-  packages: write
-
 jobs:
-  publish:
+  image:
     runs-on: ubuntu-latest
     timeout-minutes: 60
+    permissions:
+      contents: read
+      packages: write
     steps:
       - uses: actions/checkout@v5
         with:
@@ -57,3 +58,41 @@ jobs:
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
+
+  npm:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: read
+      id-token: write # npm trusted publishing (OIDC) + provenance
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          ref: ${{ inputs.tag || github.ref_name }}
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 24.x
+          registry-url: https://registry.npmjs.org
+          cache: npm
+
+      # Trusted publishing needs npm >= 11.5.1.
+      - run: npm install -g npm@11
+
+      - run: npm ci
+
+      - run: npm test
+
+      - name: Publish (skips when the version is already on the registry)
+        run: |
+          TAG="${{ inputs.tag || github.ref_name }}"
+          VERSION=$(node -p "require('./package.json').version")
+          if [ "v$VERSION" != "$TAG" ]; then
+            echo "::error::package.json version ($VERSION) does not match tag ($TAG)"
+            exit 1
+          fi
+          if npm view "jonobones@$VERSION" version >/dev/null 2>&1; then
+            echo "jonobones@$VERSION is already on the registry — skipping"
+            exit 0
+          fi
+          npm publish
