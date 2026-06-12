@@ -12,5 +12,8 @@ export function defaultConfig(): Config {
       interval: 300,
     },
     e2ee: {},
+    events: {
+      retentionDays: 30,
+    },
   };
 }

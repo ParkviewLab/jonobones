@@ -68,9 +68,19 @@ export interface JoplinServices {
 }
 /* eslint-enable @typescript-eslint/no-explicit-any */
 
+export interface ItemEventSink {
+  emit(
+    itemType: 'note' | 'notebook' | 'tag' | 'resource',
+    itemId: string,
+    changeType: 'create' | 'update' | 'delete',
+  ): void;
+}
+
 export interface JoplinContext {
   lib: LibHandles;
   services: JoplinServices;
+  /** Set by the daemon once the event journal is open; mutations emit here. */
+  events?: ItemEventSink;
   /** The stock Joplin client profile dir: <jonobones profile>/joplin */
   joplinProfileDir: string;
   shutdown(): Promise<void>;

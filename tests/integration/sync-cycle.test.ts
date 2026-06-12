@@ -60,6 +60,7 @@ beforeAll(async () => {
     api: { port: 0, bind: '127.0.0.1', token: TOKEN },
     sync: { target: 'filesystem', interval: 0, path: syncDir }, // interval 0: on-demand only (test drives syncs)
     e2ee: {},
+    events: { retentionDays: 30 },
   };
   daemon = await startDaemon({ profileDir, config, writeLock: false, autoSync: false });
   base = `http://127.0.0.1:${daemon.port}/v1`;

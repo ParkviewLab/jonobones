@@ -10,16 +10,19 @@ import { registerUserDataRoutes } from './routes/userdata.js';
 import { registerResourceRoutes } from './routes/resources.js';
 import { registerExtraRoutes } from './routes/extras.js';
 import { registerServiceRoutes, type ServiceDeps } from './routes/service.js';
+import { registerEventRoutes } from './routes/events.js';
+import type { EventHub } from '../events/hub.js';
 import { API_VERSION, APP_NAME, VERSION } from '../version.js';
 
 export function buildServer(
   config: Config,
   joplin: JoplinContext | null = null,
   service: ServiceDeps | null = null,
+  hub: EventHub | null = null,
 ): FastifyInstance {
   // maxParamLength: userdata namespace/key segments are up to 255 chars
   // (Joplin's limit); Fastify's default of 100 would 404 them.
-  const app = Fastify({ logger: false, maxParamLength: 512 });
+  const app = Fastify({ logger: false, routerOptions: { maxParamLength: 512 } });
 
   // 512 MB blob ceiling; resources of that size already strain Joplin sync.
   app.register(multipart, { limits: { fileSize: 512 * 1024 * 1024, files: 1 } });
@@ -71,6 +74,7 @@ export function buildServer(
         registerResourceRoutes(v1, joplin);
         registerExtraRoutes(v1, joplin);
         if (service) registerServiceRoutes(v1, joplin, service);
+        if (hub) registerEventRoutes(v1, hub);
       }
     },
     { prefix: '/v1' },

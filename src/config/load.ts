@@ -6,8 +6,8 @@ import { ConfigError, type CliFlags, type Config } from './types.js';
 
 export const CONFIG_FILENAME = 'config.json5';
 
-type Section = 'api' | 'sync' | 'e2ee';
-const SECTIONS: Section[] = ['api', 'sync', 'e2ee'];
+type Section = 'api' | 'sync' | 'e2ee' | 'events';
+const SECTIONS: Section[] = ['api', 'sync', 'e2ee', 'events'];
 
 interface SectionOverlay {
   [key: string]: unknown;

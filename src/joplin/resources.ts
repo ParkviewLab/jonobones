@@ -98,6 +98,7 @@ export async function createResourceFromFile(
   const saved = (await ctx.lib.shim.createResourceFromPath(tempPath, props, {
     resizeLargeImages: 'never',
   })) as JoplinItem;
+  ctx.events?.emit('resource', saved.id as string, 'create');
   return stripLibMetadata((await loadResource(ctx, saved.id as string))!);
 }
 
@@ -110,6 +111,7 @@ export async function updateResource(ctx: JoplinContext, id: string, props: Jopl
     }
   }
   await ctx.lib.Resource.save({ ...props, id });
+  ctx.events?.emit('resource', id, 'update');
   return stripLibMetadata((await loadResource(ctx, id))!);
 }
 
@@ -119,6 +121,7 @@ export async function deleteResource(ctx: JoplinContext, id: string): Promise<vo
   // Resources have no trash in Joplin; deletion is permanent and removes
   // the blob as well.
   await ctx.lib.Resource.delete(id, { sourceDescription: 'jonobones api' });
+  ctx.events?.emit('resource', id, 'delete');
 }
 
 /** Resources referenced by a note's body (:/<id> links), per Note.linkedItemIds. */

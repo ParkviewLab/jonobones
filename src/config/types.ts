@@ -16,10 +16,15 @@ export interface E2eeConfig {
   masterPassword?: string;
 }
 
+export interface EventsConfig {
+  retentionDays: number;
+}
+
 export interface Config {
   api: ApiConfig;
   sync: SyncConfig;
   e2ee: E2eeConfig;
+  events: EventsConfig;
 }
 
 export interface CliFlags {
