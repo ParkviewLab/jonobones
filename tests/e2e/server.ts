@@ -6,7 +6,9 @@ import { execFileSync, spawnSync } from 'node:child_process';
 import { randomBytes } from 'node:crypto';
 import { createServer } from 'node:net';
 
-export const JOPLIN_SERVER_IMAGE = 'joplin/server:3.7.1';
+// Pinned for reproducibility; the CI workflow sets the same value as an
+// env var so its image cache and the suite can never disagree.
+export const JOPLIN_SERVER_IMAGE = process.env.JOPLIN_SERVER_IMAGE ?? 'joplin/server:3.7.1';
 
 // The image's seeded admin account. Verified against the server source: the
 // initial migration inserts it with no must-set-password or email gate, so

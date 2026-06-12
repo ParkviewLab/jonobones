@@ -74,3 +74,46 @@ jobs:
           done
           [ "$ok" = "1" ] || (docker logs jb; exit 1)
           docker rm -f jb
+
+  # Full-system proof: a real Joplin Server (Docker) + the official joplin
+  # CLI + the example app, all through one daemon — sync fidelity, SSE
+  # events, E2EE, and resilience over sync target 9.
+  e2e:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      JOPLIN_SERVER_IMAGE: joplin/server:3.7.1
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 24.x
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Install the official joplin CLI
+        run: npm install -g joplin
+
+      # Cache the server image as a tarball: insulates the job from Docker
+      # Hub pull rate limits and shaves the pull on every warm run.
+      - name: Restore Joplin Server image cache
+        id: image-cache
+        uses: actions/cache@v4
+        with:
+          path: /tmp/joplin-server-image.tar
+          key: ${{ env.JOPLIN_SERVER_IMAGE }}
+
+      - name: Load or pull the Joplin Server image
+        run: |
+          if [ -f /tmp/joplin-server-image.tar ]; then
+            docker load -i /tmp/joplin-server-image.tar
+          else
+            docker pull "$JOPLIN_SERVER_IMAGE"
+            docker save -o /tmp/joplin-server-image.tar "$JOPLIN_SERVER_IMAGE"
+          fi
+
+      - name: E2E suite
+        run: npm run test:e2e
