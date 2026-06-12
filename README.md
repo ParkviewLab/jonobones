@@ -84,6 +84,14 @@ Joplin's end-to-end encryption protects the *sync target* copies — the local
 database is plaintext by design, in jonobones exactly as in Joplin Desktop.
 Full-disk encryption is the real wall; OS keychain support may come later.
 
+## Documentation
+
+- [docs/api.md](docs/api.md) — the full `/v1` reference
+- [docs/architecture.md](docs/architecture.md) — how the daemon derives from `@joplin/lib`
+- [docs/operations.md](docs/operations.md) — deploy, Docker, service management
+- [docs/testing.md](docs/testing.md) — the four test tiers and a manual playground
+- [docs/northstar.md](docs/northstar.md) — intent and axioms
+
 ## Credits & license
 
 jonobones is built on **[`@joplin/lib`](https://www.npmjs.com/package/@joplin/lib)**,
