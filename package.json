@@ -38,7 +38,8 @@
     "lint": "eslint .",
     "test": "vitest run",
     "spike": "node spike/lib-spike.mjs run",
-    "test:interop": "vitest run tests/interop"
+    "test:interop": "vitest run tests/interop",
+    "prepublishOnly": "npm run build"
   },
   "dependencies": {
     "@fastify/multipart": "^10.0.0",

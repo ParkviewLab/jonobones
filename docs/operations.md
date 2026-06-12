@@ -8,6 +8,10 @@ npm install -g jonobones        # Node >= 24
 
 From a checkout: `npm ci && npm run build`, then run `bin/jonobones.js`.
 
+Releases are published automatically on every version tag: npm via
+trusted publishing (OIDC) and `ghcr.io/parkviewlab/jonobones` via the
+repo's own token — no long-lived credentials in CI.
+
 ## Provision a profile
 
 ```sh
