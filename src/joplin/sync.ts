@@ -176,6 +176,16 @@ export class SyncRunner {
     const itemErrors: string[] = [];
     let lastReport: { errors?: unknown[] } = {};
 
+    // Joplin's Synchronizer swallows network failures internally (it logs
+    // them and resolves), so an unreachable target would otherwise complete
+    // as a healthy no-op cycle. Preflight the connection so /status reports
+    // an honest sync error instead of idle-while-dead.
+    try {
+      await this.testConnection();
+    } catch (error) {
+      return { ok: false, error: `sync target unreachable: ${(error as Error).message}`, itemErrors };
+    }
+
     try {
       const synchronizer = await this.synchronizer();
       const newContext = await synchronizer.start({

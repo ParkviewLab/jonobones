@@ -39,6 +39,7 @@
     "test": "vitest run",
     "spike": "node spike/lib-spike.mjs run",
     "test:interop": "vitest run tests/interop",
+    "test:e2e": "npm run build && vitest run --config vitest.e2e.config.ts",
     "prepublishOnly": "npm run build"
   },
   "dependencies": {

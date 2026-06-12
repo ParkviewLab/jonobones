@@ -37,6 +37,13 @@ export class JoplinCli {
     this.run('config', 'sync.2.path', syncDir);
   }
 
+  public configureJoplinServerSync(url: string, email: string, password: string): void {
+    this.run('config', 'sync.target', '9');
+    this.run('config', 'sync.9.path', url);
+    this.run('config', 'sync.9.username', email);
+    this.run('config', 'sync.9.password', password);
+  }
+
   public sync(): string {
     return this.run('sync');
   }
