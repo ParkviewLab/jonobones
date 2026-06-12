@@ -4,8 +4,13 @@
 // future daemon) exchange a note through a filesystem sync target:
 //
 //   node spike/lib-spike.mjs run            ← orchestrator (temp dirs, spawns the two below)
-//   node spike/lib-spike.mjs seed   --profile <dir> --sync-dir <dir>
+//   node spike/lib-spike.mjs seed   --profile <dir> --sync-dir <dir> [--title <t>]
 //   node spike/lib-spike.mjs verify --profile <dir> --sync-dir <dir> --folder-id <id> --note-id <id>
+//   node spike/lib-spike.mjs expect --profile <dir> --sync-dir <dir> --title <t>
+//
+// seed/expect double as a generic "second Joplin-lib client" for the daemon
+// integration tests: seed pushes a note into a sync target, expect syncs and
+// asserts a note with the given title arrived.
 //
 // Bootstrap sequence cribbed from @joplin/lib/testing/test-utils.ts and
 // jest.setup.js (the lib's own minimal headless boot), adapted to a fresh
@@ -189,10 +194,26 @@ async function bootstrap(profileDir, syncDir) {
 async function seed() {
 	const { Folder, Note, sync, shutdown } = await bootstrap(arg('--profile'), arg('--sync-dir'));
 	const folder = await Folder.save({ title: FOLDER_TITLE });
-	const note = await Note.save({ title: NOTE_TITLE, body: NOTE_BODY, parent_id: folder.id });
+	const note = await Note.save({
+		title: arg('--title') ?? NOTE_TITLE,
+		body: arg('--body') ?? NOTE_BODY,
+		parent_id: folder.id,
+	});
 	await sync();
 	await shutdown();
 	emitResult({ folderId: folder.id, noteId: note.id });
+}
+
+// Sync, then assert a note with the given title exists (peer-pull check).
+async function expectNote() {
+	const wantedTitle = arg('--title');
+	const { Note, sync, shutdown } = await bootstrap(arg('--profile'), arg('--sync-dir'));
+	await sync();
+	const notes = await Note.all();
+	const found = notes.find((n) => n.title === wantedTitle);
+	await shutdown();
+	emitResult({ ok: !!found, noteId: found ? found.id : null });
+	if (!found) process.exitCode = 1;
 }
 
 async function verify() {
@@ -271,7 +292,7 @@ async function run() {
 }
 
 const mode = process.argv[2];
-const modes = { run, seed, verify };
+const modes = { run, seed, verify, expect: expectNote };
 if (!modes[mode]) {
 	console.error('usage: lib-spike.mjs run | seed --profile <dir> --sync-dir <dir> | verify --profile <dir> --sync-dir <dir> --folder-id <id> --note-id <id>');
 	process.exit(2);

@@ -15,7 +15,7 @@ beforeAll(async () => {
   profileDir = mkdtempSync(join(tmpdir(), 'jonobones-extras-test-'));
   const config: Config = {
     api: { port: 0, bind: '127.0.0.1', token: TOKEN },
-    sync: { target: 'filesystem', interval: 300 },
+    sync: { target: 'none', interval: 0 },
     e2ee: {},
   };
   daemon = await startDaemon({ profileDir, config, writeLock: false });
