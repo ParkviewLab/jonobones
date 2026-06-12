@@ -11,6 +11,9 @@ COPY src/ src/
 RUN npm run build
 
 FROM node:24-slim
+LABEL org.opencontainers.image.source="https://github.com/ParkviewLab/jonobones" \
+      org.opencontainers.image.description="A headless, Joplin-sync-compatible knowledge daemon" \
+      org.opencontainers.image.licenses="AGPL-3.0-or-later"
 WORKDIR /app
 ENV NODE_ENV=production
 COPY package.json package-lock.json ./

@@ -45,8 +45,9 @@ All endpoints except `GET /health` require the API token, either as
 `lock.json` in the profile directory (mode 0600) for local discovery.
 
 Run it under your service manager with `jonobones service install`
-(launchd on macOS, systemd on Linux), or in Docker — every config key is
-overridable via `JONOBONES_*` environment variables.
+(launchd on macOS, systemd on Linux), or in Docker via
+`ghcr.io/parkviewlab/jonobones` — every config key is overridable via
+`JONOBONES_*` environment variables.
 
 ## Smoke test
 
