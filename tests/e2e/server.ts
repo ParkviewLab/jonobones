@@ -21,8 +21,86 @@ export function hasDocker(): boolean {
   return res.status === 0;
 }
 
-function docker(...args: string[]): string {
+export function docker(...args: string[]): string {
   return execFileSync('docker', args, { encoding: 'utf8', timeout: 300_000 });
+}
+
+export interface NetworkedJoplinServerHandle {
+  name: string;
+  /** Canonical URL — resolvable only inside the docker network. */
+  url: string;
+  stop(): Promise<void>;
+}
+
+/**
+ * A Joplin Server reachable only inside a docker network, with
+ * APP_BASE_URL set to its canonical in-network URL — the shape of a real
+ * deployment, where every client must use the URL the server declares
+ * (any other origin is 404'd, /api/ping included). Readiness is therefore
+ * polled from inside the network; `readinessImage` supplies node for the
+ * one-shot waiter container.
+ */
+export async function startJoplinServerOnNetwork(
+  network: string,
+  readinessImage: string,
+): Promise<NetworkedJoplinServerHandle> {
+  try {
+    docker('image', 'inspect', JOPLIN_SERVER_IMAGE);
+  } catch {
+    docker('pull', JOPLIN_SERVER_IMAGE);
+  }
+
+  const name = `jb-e2e-srv-${randomBytes(3).toString('hex')}`;
+  const url = `http://${name}:22300`;
+  docker(
+    'run',
+    '-d',
+    '--label',
+    'jonobones-e2e',
+    '--name',
+    name,
+    '--network',
+    network,
+    '-e',
+    `APP_BASE_URL=${url}`,
+    '-e',
+    'JOPLIN_IS_TESTING=1',
+    JOPLIN_SERVER_IMAGE,
+  );
+
+  const waitScript =
+    `const deadline = Date.now() + 120000;` +
+    `(async () => { for (;;) {` +
+    `  try { const res = await fetch('${url}/api/ping');` +
+    `    if (res.ok && (await res.json()).status === 'ok') process.exit(0); } catch {}` +
+    `  if (Date.now() > deadline) process.exit(1);` +
+    `  await new Promise((r) => setTimeout(r, 500));` +
+    `} })();`;
+  try {
+    docker('run', '--rm', '--network', network, '--entrypoint', 'node', readinessImage, '-e', waitScript);
+  } catch (error) {
+    let logs = '';
+    try {
+      logs = docker('logs', '--tail', '30', name);
+    } catch {
+      /* container gone */
+    }
+    throw new Error(`Joplin Server ${name} did not become ready inside network ${network}\n${logs}`, {
+      cause: error,
+    });
+  }
+
+  return {
+    name,
+    url,
+    stop: async () => {
+      try {
+        docker('rm', '-f', name);
+      } catch {
+        /* already gone */
+      }
+    },
+  };
 }
 
 async function freePort(): Promise<number> {
