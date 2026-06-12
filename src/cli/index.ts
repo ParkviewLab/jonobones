@@ -7,6 +7,7 @@ import { ConfigError, type CliFlags } from '../config/types.js';
 import { startDaemon } from '../daemon.js';
 import { commandInit } from './commands/init.js';
 import { commandStatus, commandStop, commandSync } from './commands/control.js';
+import { commandService } from './commands/service.js';
 import { VERSION } from '../version.js';
 
 const USAGE = `jonobones ${VERSION} — a headless, Joplin-sync-compatible knowledge daemon
@@ -19,6 +20,8 @@ commands:
   stop                  stop the daemon for this profile
   status                show daemon + sync + e2ee status
   sync                  trigger a sync cycle now
+  service install       register with launchd (macOS) / systemd --user (Linux)
+  service uninstall     remove the service registration
 
 options:
   --profile <name|path> profile to use (default: "default")
@@ -27,10 +30,11 @@ options:
   --help                show this help
   --version             show version
 
-service install/uninstall arrives in a later milestone.`;
+run \`jonobones <command> --help\` is not a thing yet — this is the full list.`;
 
 interface ParsedCli {
   command: string | undefined;
+  subcommand: string | undefined;
   flags: CliFlags;
   help: boolean;
   version: boolean;
@@ -60,7 +64,13 @@ export function parseCli(argv: string[]): ParsedCli {
     flags.port = port;
   }
 
-  return { command: positionals[0], flags, help: values.help, version: values.version };
+  return {
+    command: positionals[0],
+    subcommand: positionals[1],
+    flags,
+    help: values.help,
+    version: values.version,
+  };
 }
 
 async function commandStart(flags: CliFlags): Promise<void> {
@@ -122,6 +132,11 @@ export async function main(argv: string[] = process.argv.slice(2)): Promise<void
     status: commandStatus,
     sync: commandSync,
   };
+
+  if (parsed.command === 'service') {
+    await commandService(parsed.subcommand, parsed.flags);
+    return;
+  }
 
   const command = commands[parsed.command];
   if (command) {
