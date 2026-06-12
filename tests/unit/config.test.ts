@@ -22,7 +22,7 @@ describe('loadConfig precedence', () => {
     const config = loadConfig({ profileDir: tempProfile(), env: {} });
     expect(config.api.port).toBe(26637);
     expect(config.api.bind).toBe('127.0.0.1');
-    expect(config.sync.target).toBe('filesystem');
+    expect(config.sync.target).toBe('none');
     expect(config.sync.interval).toBe(300);
     expect(config.api.token).toBeUndefined();
   });
