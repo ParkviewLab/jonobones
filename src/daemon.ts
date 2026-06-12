@@ -97,13 +97,10 @@ export async function startDaemon({
   }
 
   const scheduler = new SyncScheduler(runner, config.sync.interval, {
-    onCycleComplete: (result) => {
-      void (async () => {
-        if (result.ok) await runPostSyncScan(joplin, hub);
-        await journal.pruneOlderThan(Date.now() - retentionMs);
-      })()
-        .catch((error) => console.error('post-sync event scan failed:', error))
-        .finally(() => onSyncCycle?.(result));
+    onCycleComplete: async (result) => {
+      if (result.ok) await runPostSyncScan(joplin, hub);
+      await journal.pruneOlderThan(Date.now() - retentionMs);
+      onSyncCycle?.(result);
     },
   });
   if (autoSync) scheduler.start();
