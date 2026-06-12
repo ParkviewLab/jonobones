@@ -6,6 +6,9 @@
 npm install -g jonobones        # Node >= 24
 ```
 
+`@parkviewlab/jonobones` is a published alias of the same package (same
+version, same binary); `jonobones` is canonical.
+
 From a checkout: `npm ci && npm run build`, then run `bin/jonobones.js`.
 
 Releases are published automatically on every version tag: npm via

@@ -29,7 +29,7 @@ storage layer, without embedding Joplin or requiring Joplin Desktop to run.
 ## Quickstart
 
 ```sh
-npm install -g jonobones
+npm install -g jonobones            # also available as @parkviewlab/jonobones
 
 jonobones init       # interactive: pick a sync target, run the first sync,
                      # set up the API token — populates the knowledge base

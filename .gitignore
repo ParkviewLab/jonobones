@@ -1,4 +1,5 @@
 node_modules/
 dist/
+alias-build/
 *.log
 .DS_Store

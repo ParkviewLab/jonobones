@@ -83,7 +83,7 @@ jobs:
 
       - run: npm test
 
-      - name: Publish (skips when the version is already on the registry)
+      - name: Publish jonobones (skips when already on the registry)
         run: |
           TAG="${{ inputs.tag || github.ref_name }}"
           VERSION=$(node -p "require('./package.json').version")
@@ -96,3 +96,15 @@ jobs:
             exit 0
           fi
           npm publish
+
+      # The scoped alias: same version, depends on the exact canonical
+      # release, same binary. Needs its own trusted-publisher config.
+      - name: Publish @parkviewlab/jonobones alias (skips when already published)
+        run: |
+          VERSION=$(node -p "require('./package.json').version")
+          if npm view "@parkviewlab/jonobones@$VERSION" version >/dev/null 2>&1; then
+            echo "@parkviewlab/jonobones@$VERSION is already on the registry — skipping"
+            exit 0
+          fi
+          node scripts/build-scoped-alias.mjs
+          cd alias-build && npm publish
