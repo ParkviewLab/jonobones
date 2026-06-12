@@ -1,14 +1,23 @@
 import Fastify, { type FastifyInstance } from 'fastify';
+import multipart from '@fastify/multipart';
 import type { Config } from '../config/types.js';
 import type { JoplinContext } from '../joplin/bootstrap.js';
 import { ItemConflictError, ItemNotFoundError, ItemValidationError } from '../joplin/errors.js';
 import { makeAuthHook } from './auth.js';
 import { ApiError, codeForStatus, errorEnvelope } from './errors.js';
 import { registerItemRoutes } from './routes/items.js';
+import { registerUserDataRoutes } from './routes/userdata.js';
+import { registerResourceRoutes } from './routes/resources.js';
+import { registerExtraRoutes } from './routes/extras.js';
 import { API_VERSION, APP_NAME, VERSION } from '../version.js';
 
 export function buildServer(config: Config, joplin: JoplinContext | null = null): FastifyInstance {
-  const app = Fastify({ logger: false });
+  // maxParamLength: userdata namespace/key segments are up to 255 chars
+  // (Joplin's limit); Fastify's default of 100 would 404 them.
+  const app = Fastify({ logger: false, maxParamLength: 512 });
+
+  // 512 MB blob ceiling; resources of that size already strain Joplin sync.
+  app.register(multipart, { limits: { fileSize: 512 * 1024 * 1024, files: 1 } });
 
   app.addHook('onRequest', makeAuthHook(config.api.token ?? ''));
 
@@ -51,7 +60,12 @@ export function buildServer(config: Config, joplin: JoplinContext | null = null)
         apiVersion: API_VERSION,
       }));
 
-      if (joplin) registerItemRoutes(v1, joplin);
+      if (joplin) {
+        registerItemRoutes(v1, joplin);
+        registerUserDataRoutes(v1, joplin);
+        registerResourceRoutes(v1, joplin);
+        registerExtraRoutes(v1, joplin);
+      }
     },
     { prefix: '/v1' },
   );
