@@ -53,3 +53,24 @@ jobs:
 
       - name: Interop round-trip suite
         run: npm run test:interop
+
+  # Image build sanity (no publish — registry/publishing is the owner's call).
+  docker:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Build image
+        run: docker build -t jonobones:ci .
+
+      - name: Boot container and check /v1/health
+        run: |
+          docker run -d --name jb -p 127.0.0.1:26637:26637 \
+            -e JONOBONES_API_TOKEN=ci-smoke-token jonobones:ci
+          for i in $(seq 1 30); do
+            if curl -fsS http://127.0.0.1:26637/v1/health; then ok=1; break; fi
+            sleep 1
+          done
+          [ "$ok" = "1" ] || (docker logs jb; exit 1)
+          docker rm -f jb
