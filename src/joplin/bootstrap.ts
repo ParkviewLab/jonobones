@@ -40,6 +40,11 @@ export interface LibHandles {
   ItemChange: any;
   ModelType: any;
   restoreItems: (itemType: any, ids: string[], options?: any) => Promise<void>;
+  shim: any;
+  SearchEngine: any;
+  setItemUserData: (itemType: any, itemId: string, ns: string, key: string, value: unknown, deleted?: boolean) => Promise<unknown>;
+  getItemUserData: (itemType: any, itemId: string, ns: string, key: string) => Promise<unknown>;
+  deleteItemUserData: (itemType: any, itemId: string, ns: string, key: string) => Promise<unknown>;
   database: any;
   registry: any;
   SyncTargetRegistry: any;
@@ -98,6 +103,9 @@ export async function bootstrapJoplin({ profileDir }: BootstrapOptions): Promise
   const Revision = req('@joplin/lib/models/Revision.js').default;
   const ItemChange = req('@joplin/lib/models/ItemChange.js').default;
   const restoreItems = req('@joplin/lib/services/trash/restoreItems.js').default;
+  const shim = req('@joplin/lib/shim.js').default;
+  const SearchEngine = req('@joplin/lib/services/search/SearchEngine.js').default;
+  const { setItemUserData, getItemUserData, deleteItemUserData } = req('@joplin/lib/models/utils/userData.js');
   const JoplinDatabase = req('@joplin/lib/JoplinDatabase.js').default;
   const { DatabaseDriverNode } = req('@joplin/lib/database-driver-node.js');
   const SyncTargetRegistry = req('@joplin/lib/SyncTargetRegistry.js').default;
@@ -185,6 +193,7 @@ export async function bootstrapJoplin({ profileDir }: BootstrapOptions): Promise
   decryptionWorker.setEncryptionService(encryptionService);
   DecryptionWorker.instance_ = decryptionWorker;
   KvStore.instance().setDb(database);
+  SearchEngine.instance().setDb(database);
   setRSA(RSA);
 
   const lib: LibHandles = {
@@ -201,6 +210,11 @@ export async function bootstrapJoplin({ profileDir }: BootstrapOptions): Promise
     ItemChange,
     ModelType,
     restoreItems,
+    shim,
+    SearchEngine,
+    setItemUserData,
+    getItemUserData,
+    deleteItemUserData,
     database,
     registry: reg,
     SyncTargetRegistry,
