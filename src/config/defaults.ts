@@ -8,7 +8,9 @@ export function defaultConfig(): Config {
       bind: '127.0.0.1',
     },
     sync: {
-      target: 'filesystem',
+      // 'none' = API-only until provisioned; `jonobones init` writes the
+      // real target. A bare `start` (or the Docker smoke) must come up.
+      target: 'none',
       interval: 300,
     },
     e2ee: {},
