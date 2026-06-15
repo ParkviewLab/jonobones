@@ -1,3 +1,7 @@
+// SPDX-FileCopyrightText: 2026 Gary Frattarola <garyf@parkviewlab.ai>
+//
+// SPDX-License-Identifier: AGPL-3.0-or-later
+
 import type { FastifyInstance } from 'fastify';
 import type { JoplinContext } from '../../joplin/bootstrap.js';
 import { e2eeStatusData, profileStatusData, syncStatusData, type SyncTargetSpec } from '../../joplin/sync.js';

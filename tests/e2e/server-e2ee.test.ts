@@ -1,3 +1,7 @@
+// SPDX-FileCopyrightText: 2026 Gary Frattarola <garyf@parkviewlab.ai>
+//
+// SPDX-License-Identifier: AGPL-3.0-or-later
+
 // E2E: end-to-end encryption over a Joplin Server target. The daemon
 // enables E2EE (the same lib call a stock client makes) and uploads
 // ciphertext; the official CLI joins the encrypted target with the shared

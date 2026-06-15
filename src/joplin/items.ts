@@ -1,3 +1,7 @@
+// SPDX-FileCopyrightText: 2026 Gary Frattarola <garyf@parkviewlab.ai>
+//
+// SPDX-License-Identifier: AGPL-3.0-or-later
+
 // Typed data-plane operations over the Joplin models. Reads compose
 // validated SELECTs (read-only SQL is safe); every WRITE goes through the
 // lib model layer — Joplin keeps its sync bookkeeping (item_changes,

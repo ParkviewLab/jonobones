@@ -1,3 +1,7 @@
+// SPDX-FileCopyrightText: 2026 Gary Frattarola <garyf@parkviewlab.ai>
+//
+// SPDX-License-Identifier: AGPL-3.0-or-later
+
 // M6 interop proof, E2EE: an encrypted filesystem target shared between
 // jonobones and the official joplin CLI, both configured with the same
 // master password. Proves the daemon both produces and consumes encrypted

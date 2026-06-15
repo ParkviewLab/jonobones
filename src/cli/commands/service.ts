@@ -1,3 +1,7 @@
+// SPDX-FileCopyrightText: 2026 Gary Frattarola <garyf@parkviewlab.ai>
+//
+// SPDX-License-Identifier: AGPL-3.0-or-later
+
 // `jonobones service install|uninstall` — register the daemon with the
 // user-level service manager: launchd on macOS, systemd (user) on Linux.
 // The daemon itself stays a foreground process; supervision is the service

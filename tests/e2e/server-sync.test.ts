@@ -1,3 +1,7 @@
+// SPDX-FileCopyrightText: 2026 Gary Frattarola <garyf@parkviewlab.ai>
+//
+// SPDX-License-Identifier: AGPL-3.0-or-later
+
 // E2E: sync fidelity through a real Joplin Server (target 9). Three actors
 // share one server: the official joplin CLI, an in-process daemon, and the
 // example app — plus one spawned `bin/jonobones.js` to prove the

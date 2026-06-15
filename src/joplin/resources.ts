@@ -1,3 +1,7 @@
+// SPDX-FileCopyrightText: 2026 Gary Frattarola <garyf@parkviewlab.ai>
+//
+// SPDX-License-Identifier: AGPL-3.0-or-later
+
 import { stat } from 'node:fs/promises';
 import type { JoplinContext } from './bootstrap.js';
 import { ItemConflictError, ItemNotFoundError, ItemValidationError } from './errors.js';

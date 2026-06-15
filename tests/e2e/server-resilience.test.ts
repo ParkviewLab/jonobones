@@ -1,3 +1,7 @@
+// SPDX-FileCopyrightText: 2026 Gary Frattarola <garyf@parkviewlab.ai>
+//
+// SPDX-License-Identifier: AGPL-3.0-or-later
+
 // E2E: resilience. Daemon restarts must not replay or lose events
 // (checkpoint + journal persist), concurrent edits must produce Joplin
 // conflict semantics, and a server outage must degrade gracefully and

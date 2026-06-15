@@ -1,3 +1,7 @@
+// SPDX-FileCopyrightText: 2026 Gary Frattarola <garyf@parkviewlab.ai>
+//
+// SPDX-License-Identifier: AGPL-3.0-or-later
+
 // Sync target configuration and the sync runner. config.json5 is canonical:
 // every boot re-applies the mapped values into Joplin's Setting store, so
 // the stock profile always reflects the config (never the other way round).
