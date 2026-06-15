@@ -1,3 +1,7 @@
+// SPDX-FileCopyrightText: 2026 Gary Frattarola <garyf@parkviewlab.ai>
+//
+// SPDX-License-Identifier: AGPL-3.0-or-later
+
 // Shared glue for the e2e suites: daemon config factory for the
 // joplinServer target, an authenticated HTTP client with the
 // sync-and-wait-idle pattern, and spawned-daemon helpers (the shipped

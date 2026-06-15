@@ -1,3 +1,7 @@
+// SPDX-FileCopyrightText: 2026 Gary Frattarola <garyf@parkviewlab.ai>
+//
+// SPDX-License-Identifier: AGPL-3.0-or-later
+
 // M6 interop proof, plaintext: jonobones and the OFFICIAL joplin CLI share
 // a filesystem sync target; notes, notebooks, tags, note↔tag links,
 // resources, and user_data must round-trip byte-faithfully in both

@@ -1,3 +1,7 @@
+// SPDX-FileCopyrightText: 2026 Gary Frattarola <garyf@parkviewlab.ai>
+//
+// SPDX-License-Identifier: AGPL-3.0-or-later
+
 // Interactive prompts over a line queue we own. readline/promises drops
 // type-ahead lines that arrive while no question is pending (they fire as
 // unlistened 'line' events), which breaks scripted use like

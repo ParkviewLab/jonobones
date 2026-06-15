@@ -1,3 +1,7 @@
+// SPDX-FileCopyrightText: 2026 Gary Frattarola <garyf@parkviewlab.ai>
+//
+// SPDX-License-Identifier: AGPL-3.0-or-later
+
 import { mkdirSync } from 'node:fs';
 import { parseArgs } from 'node:util';
 import { loadConfig, validateConfigForServe } from '../config/load.js';

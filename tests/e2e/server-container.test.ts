@@ -1,3 +1,7 @@
+// SPDX-FileCopyrightText: 2026 Gary Frattarola <garyf@parkviewlab.ai>
+//
+// SPDX-License-Identifier: AGPL-3.0-or-later
+
 // E2E: the container image as a user deploys it. Builds the local
 // Dockerfile, then drives the result like a real deployment: env-only
 // configuration, the profile on a named volume, a Joplin Server reachable

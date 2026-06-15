@@ -1,3 +1,7 @@
+// SPDX-FileCopyrightText: 2026 Gary Frattarola <garyf@parkviewlab.ai>
+//
+// SPDX-License-Identifier: AGPL-3.0-or-later
+
 // Drives examples/jonobones-app.mjs as a child process — the second
 // "actor" of the e2e tier, exactly like JoplinCli drives the official
 // client. Non-watch commands run synchronously and return parsed JSON;

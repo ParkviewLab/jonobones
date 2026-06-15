@@ -1,0 +1,25 @@
+version = 1
+
+SPDX-PackageName = "jonobones"
+SPDX-PackageSupplier = "Gary Frattarola <garyf@parkviewlab.ai>"
+
+# Docs + repo meta → CC-BY-4.0 (the writing)
+[[annotations]]
+path = ["README.md", "LICENSING.md", "CHANGELOG.md", "AGENTS.md", "CLAUDE.md", "docs/**", "REUSE.toml", ".gitignore"]
+precedence = "aggregate"
+SPDX-FileCopyrightText = "2026 Gary Frattarola <garyf@parkviewlab.ai>"
+SPDX-License-Identifier = "CC-BY-4.0"
+
+# Source, tests, scripts, CI & build config → AGPL-3.0-or-later (the program).
+# jonobones is a derived work of Joplin (@joplin/lib, AGPL-3.0-or-later) — see LICENSING.md.
+[[annotations]]
+path = [
+  "src/**", "tests/**", "bin/**", "scripts/**", "examples/**", "spike/**",
+  ".github/**", "Dockerfile", ".dockerignore",
+  "eslint.config.js", "vitest.config.ts", "vitest.e2e.config.ts",
+  "tsconfig.json", "tsconfig.build.json", "cliff.toml",
+  "package.json", "package-lock.json",
+]
+precedence = "aggregate"
+SPDX-FileCopyrightText = "2026 Gary Frattarola <garyf@parkviewlab.ai>"
+SPDX-License-Identifier = "AGPL-3.0-or-later"
