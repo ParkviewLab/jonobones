@@ -1,3 +1,7 @@
+// SPDX-FileCopyrightText: 2026 Gary Frattarola <garyf@parkviewlab.ai>
+//
+// SPDX-License-Identifier: AGPL-3.0-or-later
+
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import JSON5 from 'json5';

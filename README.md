@@ -124,3 +124,6 @@ by, or part of the Joplin project; "Joplin" is used here only to describe
 compatibility ("Joplin-sync-compatible").
 
 Licensed [AGPL-3.0-or-later](LICENSE), matching `@joplin/lib` upstream.
+
+---
+<sub>© 2026 Gary Frattarola · Licensed under [AGPL-3.0-or-later](LICENSE), matching @joplin/lib upstream · part of [ParkviewLab](https://github.com/ParkviewLab)</sub>

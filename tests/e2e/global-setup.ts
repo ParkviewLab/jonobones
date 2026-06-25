@@ -1,3 +1,7 @@
+// SPDX-FileCopyrightText: 2026 Gary Frattarola <garyf@parkviewlab.ai>
+//
+// SPDX-License-Identifier: AGPL-3.0-or-later
+
 // Sweeps orphaned e2e resources (label jonobones-e2e) before and after the
 // run, so a crashed or interrupted previous run can't leak Joplin Server /
 // app containers, volumes, or networks — or occupy ports.

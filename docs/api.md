@@ -12,21 +12,37 @@ Every endpoint except `GET /health` requires the API token:
 - `Authorization: Bearer <token>` (preferred), or
 - `?token=<token>` (exists for `EventSource`/SSE clients, accepted everywhere).
 
-Missing/wrong token → `401` with the error envelope. The token lives in
-`config.json5` and, while the daemon runs, in `lock.json` (both `0600`).
+Missing/wrong token → `401` with the error envelope. If no token is
+configured, every authenticated request still `401`s — a token must be set.
+The token lives in `config.json5` and, while the daemon runs, in `lock.json`
+(both `0600`).
 
 ### Errors
 
 All errors are
 `{"error": {"code": "<machine_code>", "message": "<human text>"}}` with an
-honest HTTP status: `400 bad_request`, `401 unauthorized`, `404 not_found`,
-`409 conflict`, `500 internal_error`.
+honest HTTP status. The codes the API emits: `400 bad_request`,
+`401 unauthorized`, `403 forbidden`, `404 not_found`, `409 conflict`,
+`413 payload_too_large`, `415 unsupported_media_type`, `422 unprocessable`,
+`500 internal_error`. An unmatched path returns `404 not_found`
+(`"no such route"`). `5xx` responses are **masked** — the `message` is always
+the generic `"internal error"` (the real cause is logged server-side), so
+don't parse it.
+
+### Status codes (success)
+
+`200` — `GET`, `PATCH` (echoes the item), and `PUT` of a `user_data` key
+(echoes `{"value": …}`). `201` — `POST` create (items and resources). `202`
+— `POST /sync` (accepted; the sync runs in the background). `204 No Content`
+— `DELETE`, tag attach (`POST /tags/{id}/notes`) / detach, and `DELETE` of a
+`user_data` key.
 
 ### Pagination (list endpoints)
 
 `?page=` (1-based, default 1) · `?limit=` (default 100, **max 1000**) ·
 `?order_by=` (any field of the type; default `updated_time`) ·
-`?order_dir=asc|desc` (default `desc`). Responses:
+`?order_dir=asc|desc` (default `desc`; case-insensitive) ·
+`?include_deleted=true` (include trashed items; off by default). Responses:
 `{"items": [...], "has_more": true|false}`. Ordering is made stable with an
 id tiebreak.
 
@@ -68,7 +84,7 @@ permanently (no `deleted_time` in the Joplin schema).
 
 | Endpoint | Description |
 | --- | --- |
-| `GET /health` | `{"app":"jonobones","version":"0.1.0","apiVersion":1}` — **no auth** |
+| `GET /health` | `{"app":"jonobones","version":"<package version>","apiVersion":1}` — `version` is the running package version (served dynamically); `apiVersion` is `1`. **No auth.** |
 | `GET /status` | `{sync:{state,lastStartedAt,lastCompletedAt,lastResult,target,pendingUpload,conflictCount}, e2ee:{enabled,pendingDecryption}, profile:{path,schemaVersion}, events:{oldestId,newestId}}` |
 | `POST /sync` | trigger a sync now → `202 {"syncing":true,"alreadyRunning":bool}` |
 
@@ -84,8 +100,11 @@ permanently (no `deleted_time` in the Joplin schema).
 | `PATCH /notes/{id}` | merge semantics |
 | `DELETE /notes/{id}` | trash; `?permanent=true` hard-deletes |
 | `POST /notes/{id}/restore` | untrash |
-| `GET /notes/{id}/tags` | tags attached to the note |
+| `GET /notes/{id}/tags` | tags attached to the note; standard list params apply (`?page=`/`?limit=`/`?order_by=`/`?order_dir=`/`?fields=`/`?include_deleted=`, over the **tag** fields) |
 | `GET /notes/{id}/resources` | resources referenced by the note body (`:/​<id>` links) |
+
+`GET /notes/{id}/resources` returns the resources the note body links; it
+takes `?fields=` but is **not paginated** (no `?page=`/`?limit=`).
 
 ## Notebooks (Joplin folders)
 
@@ -96,17 +115,18 @@ clients build the tree) · `POST /notebooks` · `GET|PATCH|DELETE
 ## Tags
 
 `GET /tags` · `POST /tags` · `GET|PATCH|DELETE /tags/{id}` ·
-`GET /tags/{id}/notes` · `POST /tags/{id}/notes` with body
-`{"id": "<note id>"}` attaches · `DELETE /tags/{id}/notes/{noteId}`
-detaches.
+`GET /tags/{id}/notes` (standard list params apply, over the **note** fields) ·
+`POST /tags/{id}/notes` with body `{"id": "<note id>"}` attaches — the id
+must be 32 lowercase hex (else `400`), success → `204` ·
+`DELETE /tags/{id}/notes/{noteId}` detaches (→ `204`).
 
 ## Resources
 
 | Endpoint | Notes |
 | --- | --- |
 | `GET /resources` | metadata list |
-| `POST /resources` | `multipart/form-data`: file part `data` (the blob) + optional field `props` (JSON: `{id?, title?}`) → `201` metadata |
-| `GET /resources/{id}` | metadata |
+| `POST /resources` | `multipart/form-data`: file part `data` (the blob) + optional field `props` (JSON: `{id?, title?}`) → `201` metadata. **One file per request, max 512 MB**; exceeding either → `413 payload_too_large` |
+| `GET /resources/{id}` | metadata; `?fields=` applies |
 | `GET /resources/{id}/file` | the blob, with `content-type`/`content-length`/`content-disposition`; `404` if the blob hasn't been downloaded from the sync target yet |
 | `PATCH /resources/{id}` | `title`, `user_created_time`, `user_updated_time` only |
 | `DELETE /resources/{id}` | permanent (blob removed too) |
@@ -142,9 +162,10 @@ stay inside it.
 - `GET /search?q=<query>` — Joplin full-text search over notes; results in
   relevance order; `?fields=`/`?limit=` apply, `has_more` only.
 - `GET /revisions` — the note-history table (populates while the daemon
-  runs, as in stock clients).
+  runs, as in stock clients); standard list params apply.
 - `GET /conflicts` — notes with `is_conflict=1`; default fields include
-  `conflict_original_id`. Conflict copies never appear in `GET /notes`.
+  `conflict_original_id`; standard list params apply. Conflict copies never
+  appear in `GET /notes`.
 
 ## Events
 

@@ -1,3 +1,7 @@
+// SPDX-FileCopyrightText: 2026 Gary Frattarola <garyf@parkviewlab.ai>
+//
+// SPDX-License-Identifier: AGPL-3.0-or-later
+
 import type { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';
 import type { EventHub } from '../../events/hub.js';
 import type { JournalEvent } from '../../events/journal.js';

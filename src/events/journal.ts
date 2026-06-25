@@ -1,3 +1,7 @@
+// SPDX-FileCopyrightText: 2026 Gary Frattarola <garyf@parkviewlab.ai>
+//
+// SPDX-License-Identifier: AGPL-3.0-or-later
+
 // jonobones' own event journal: a separate SQLite file in the jonobones
 // profile dir. NEVER a table inside Joplin's database.sqlite — the Joplin
 // profile must remain 100% stock (the prime axiom).

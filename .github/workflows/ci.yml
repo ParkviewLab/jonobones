@@ -101,7 +101,7 @@ jobs:
       # Hub pull rate limits and shaves the pull on every warm run.
       - name: Restore Joplin Server image cache
         id: image-cache
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: /tmp/joplin-server-image.tar
           key: ${{ env.JOPLIN_SERVER_IMAGE }}

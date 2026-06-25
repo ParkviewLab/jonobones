@@ -1,3 +1,7 @@
+// SPDX-FileCopyrightText: 2026 Gary Frattarola <garyf@parkviewlab.ai>
+//
+// SPDX-License-Identifier: AGPL-3.0-or-later
+
 // E2E: the SSE loop. The example app holds a `watch` connection to the
 // daemon while the official CLI (via the Joplin Server) and the app itself
 // make changes; every change must surface as an event with the right source.

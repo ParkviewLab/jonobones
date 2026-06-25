@@ -1,3 +1,7 @@
+// SPDX-FileCopyrightText: 2026 Gary Frattarola <garyf@parkviewlab.ai>
+//
+// SPDX-License-Identifier: AGPL-3.0-or-later
+
 // The anti-corruption layer's entry point. This directory is the ONLY place
 // allowed to import @joplin/lib (enforced by eslint no-restricted-imports).
 //

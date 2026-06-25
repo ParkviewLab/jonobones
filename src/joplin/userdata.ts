@@ -1,3 +1,7 @@
+// SPDX-FileCopyrightText: 2026 Gary Frattarola <garyf@parkviewlab.ai>
+//
+// SPDX-License-Identifier: AGPL-3.0-or-later
+
 // Envelope-safe user_data operations (§5.7). Joplin's user_data column is
 // a per-key LWW-merged envelope: { ns: { key: { v, t, d? } } }. Writing raw
 // JSON would silently break conflict merging, so every write goes through

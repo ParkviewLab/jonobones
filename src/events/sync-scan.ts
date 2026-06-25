@@ -1,3 +1,7 @@
+// SPDX-FileCopyrightText: 2026 Gary Frattarola <garyf@parkviewlab.ai>
+//
+// SPDX-License-Identifier: AGPL-3.0-or-later
+
 // Post-sync delta scan: after each sync cycle, find what changed in the
 // Joplin tables and emit thin events for it.
 //

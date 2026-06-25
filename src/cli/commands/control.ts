@@ -1,3 +1,7 @@
+// SPDX-FileCopyrightText: 2026 Gary Frattarola <garyf@parkviewlab.ai>
+//
+// SPDX-License-Identifier: AGPL-3.0-or-later
+
 // stop / status / sync — the control-plane commands that talk to a running
 // daemon via its lockfile (pid, port, token).
 

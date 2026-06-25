@@ -1,3 +1,7 @@
+// SPDX-FileCopyrightText: 2026 Gary Frattarola <garyf@parkviewlab.ai>
+//
+// SPDX-License-Identifier: AGPL-3.0-or-later
+
 // Helpers for the interop suites: locate and drive the official `joplin`
 // CLI, and read its profile database for assertions (we assert on the
 // CLI's own database state — its sync wrote it — instead of parsing

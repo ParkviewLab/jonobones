@@ -1,3 +1,7 @@
+// SPDX-FileCopyrightText: 2026 Gary Frattarola <garyf@parkviewlab.ai>
+//
+// SPDX-License-Identifier: AGPL-3.0-or-later
+
 // Joplin Server lifecycle for the e2e tier: one Docker container per suite
 // file, plus the minimal slice of the server's own HTTP API the tests need
 // (session login, raw item content, server-side permanent delete).
