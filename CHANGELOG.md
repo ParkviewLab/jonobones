@@ -25,3 +25,14 @@ here, and uses the same content as the GitHub Release body.
 -->
 
 ## [Unreleased]
+
+## [v0.1.5] - 2026-06-25
+
+### Highlights
+
+This is a maintenance release with no user-facing code changes: the REST API reference in docs/api.md has been corrected and expanded to cover all nine error codes, success status conventions, pagination flags, relationship-list parameters, the 512 MB resource upload limit, and several endpoint-specific quirks, and a stale hardcoded version in the /health example was removed. The remaining work is internal — REUSE/AGPL formalization, handbook onboarding, changelog automation, and a CI pin bump to Node 24.
+
+### Docs
+
+- Close REST API reference gaps (error codes, status codes, limits) (#2) (97f3ae9)
+
