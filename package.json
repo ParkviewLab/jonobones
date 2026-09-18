@@ -45,7 +45,7 @@
   },
   "dependencies": {
     "@fastify/multipart": "^10.0.0",
-    "@joplin/lib": "3.6.3",
+    "@joplin/lib": "3.7.1",
     "fastify": "^5.8.5",
     "json5": "^2.2.3",
     "sqlite3": "5.1.6"
