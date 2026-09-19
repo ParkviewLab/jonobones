@@ -1,74 +1,138 @@
-name: Release image
+name: Release
 
-# Publishes ghcr.io/parkviewlab/jonobones AND the npm package on every
-# version tag. workflow_dispatch exists to (re)publish an existing tag —
-# e.g. a tag cut before this workflow existed.
+# Assembled from the ParkviewLab handbook's release parts (docs/ci.md, v0.25.0):
+# head, gate, docker (renamed from this repo's old "image" job, to match the
+# part's name), npm (with the scoped-alias step this repo needs, since
+# jonobones publishes both `jonobones` and `@parkviewlab/jonobones`), and
+# changelog. The file keeps the name release.yml: npm's trusted publishers,
+# for both packages, are registered against it.
 #
-# Neither job stores long-lived secrets: the image job authenticates with
-# the repo's GITHUB_TOKEN, the npm job uses npm trusted publishing (OIDC).
-# One-time setup for npm: the package's first version must be published
-# manually, then the trusted publisher (this repo + release.yml, allowed
-# action: publish) is configured at npmjs.com → jonobones → Settings.
+# Dropped: the workflow_dispatch "re-publish an existing tag" path and every
+# job's `inputs.tag || github.ref_name` checkout ref (added for tags cut
+# before this workflow existed, last used 2026-06-12). A release that fails
+# part-way is recovered by re-running the tag's own run's failed jobs
+# (possible for 30 days), and after that by a patch release.
 
 on:
   push:
     tags: ['v*']
-  workflow_dispatch:
-    inputs:
-      tag:
-        description: 'Existing git tag to (re)publish, e.g. v0.1.0'
-        required: true
-        type: string
+
+permissions:
+  contents: read
 
 jobs:
-  image:
+  gate:
     runs-on: ubuntu-latest
-    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0          # full history + all tags: the ancestor and monotonic checks below
+
+      # The repository's one version file, read in `git bump`'s order.
+      - name: Verify tag matches the version file
+        run: |
+          TAG="${GITHUB_REF#refs/tags/v}"
+          if [ -f pyproject.toml ]; then
+            FILE=pyproject.toml
+            VERSION=$(python3 -c "import tomllib; print(tomllib.load(open('pyproject.toml','rb'))['project']['version'])")
+          elif [ -f package.json ]; then
+            FILE=package.json
+            VERSION=$(jq -r .version package.json)
+          elif [ -f VERSION.txt ]; then
+            FILE=VERSION.txt
+            VERSION=$(tr -d '[:space:]' < VERSION.txt)
+          else
+            echo "no version file: expected pyproject.toml, package.json or VERSION.txt"
+            exit 1
+          fi
+          # A dev version is never released: the promotion carries develop's
+          # placeholder onto main, and `git bump release` drops it before the tag.
+          case "$VERSION" in
+            *.dev[0-9]*|*-dev[0-9]*)
+              echo "::error::$FILE version '$VERSION' is a dev version; finalize the cycle with git bump release before tagging"; exit 1 ;;
+          esac
+          if [ "$TAG" != "$VERSION" ]; then
+            echo "tag $TAG != $FILE $VERSION"
+            exit 1
+          fi
+
+      - name: Verify tag is reachable from origin/main
+        run: |
+          git fetch --no-tags origin main
+          if ! git merge-base --is-ancestor "$GITHUB_SHA" origin/main; then
+            echo "tagged commit $GITHUB_SHA is not on origin/main"
+            echo "release tags must come from main — back-merge through, then re-tag from main"
+            exit 1
+          fi
+
+      - name: Verify version is greater than the previous release tag
+        run: |
+          TAG="${GITHUB_REF#refs/tags/}"
+          PREV=$(git tag --list 'v*' | grep -vxF "$TAG" | sort -V | tail -n 1 || true)
+          if [ -z "$PREV" ]; then
+            echo "no previous v* tag — first release, nothing to compare"
+            exit 0
+          fi
+          if [ "$(printf '%s\n' "$PREV" "$TAG" | sort -V | tail -n 1)" != "$TAG" ]; then
+            echo "tag $TAG is not greater than the previous release tag $PREV"
+            echo "versions only ever increase — bump past $PREV, then re-tag from main"
+            exit 1
+          fi
+
+  docker:
+    needs: gate
+    runs-on: ubuntu-latest
     permissions:
       contents: read
-      packages: write
+      packages: write       # GHCR push
     steps:
-      - uses: actions/checkout@v5
-        with:
-          ref: ${{ inputs.tag || github.ref_name }}
+      - uses: actions/checkout@v6
 
-      # arm64 covers the NAS/Pi/Apple-Silicon server crowd.
-      - uses: docker/setup-qemu-action@v4
-      - uses: docker/setup-buildx-action@v4
+      - name: Set up QEMU (arm64 emulation)
+        uses: docker/setup-qemu-action@v4
 
-      - uses: docker/login-action@v4
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v4
+
+      - name: Log in to GHCR
+        uses: docker/login-action@v4
         with:
           registry: ghcr.io
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - id: meta
+      - name: Extract metadata (tags + labels)
+        id: meta
         uses: docker/metadata-action@v6
         with:
-          images: ghcr.io/parkviewlab/jonobones
+          images: ghcr.io/${{ github.repository }}
           tags: |
-            type=semver,pattern={{version}},value=${{ inputs.tag || github.ref_name }}
-            type=semver,pattern={{major}}.{{minor}},value=${{ inputs.tag || github.ref_name }}
+            type=semver,pattern={{version}}
+            type=semver,pattern={{major}}.{{minor}}
             type=raw,value=latest
 
-      - uses: docker/build-push-action@v7
+      - name: Build and push (linux/amd64 + linux/arm64)
+        uses: docker/build-push-action@v7
         with:
           context: .
           platforms: linux/amd64,linux/arm64
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
 
+  # npm one-time setup: the package's first version must be published manually,
+  # then configure the trusted publisher (this repo + release.yml) at npmjs.com.
+  # Requires npm >= 11.5.1 for OIDC.
   npm:
+    needs: gate
     runs-on: ubuntu-latest
-    timeout-minutes: 15
     permissions:
       contents: read
-      id-token: write # npm trusted publishing (OIDC) + provenance
+      id-token: write       # npm trusted publishing (OIDC) + provenance
     steps:
-      - uses: actions/checkout@v5
-        with:
-          ref: ${{ inputs.tag || github.ref_name }}
+      - uses: actions/checkout@v6
 
       - uses: actions/setup-node@v5
         with:
@@ -76,54 +140,55 @@ jobs:
           registry-url: https://registry.npmjs.org
           cache: npm
 
-      # Trusted publishing needs npm >= 11.5.1.
-      - run: npm install -g npm@11
+      - name: Upgrade npm (trusted publishing needs >= 11.5.1)
+        run: npm install -g npm@11
 
       - run: npm ci
 
       - run: npm test
 
-      - name: Publish jonobones (skips when already on the registry)
+      - name: Publish (skips when already on the registry)
         run: |
-          TAG="${{ inputs.tag || github.ref_name }}"
+          PKG=$(node -p "require('./package.json').name")
           VERSION=$(node -p "require('./package.json').version")
-          if [ "v$VERSION" != "$TAG" ]; then
-            echo "::error::package.json version ($VERSION) does not match tag ($TAG)"
-            exit 1
-          fi
-          if npm view "jonobones@$VERSION" version >/dev/null 2>&1; then
-            echo "jonobones@$VERSION is already on the registry — skipping"
+          if npm view "$PKG@$VERSION" version >/dev/null 2>&1; then
+            echo "$PKG@$VERSION is already on the registry — skipping"
             exit 0
           fi
           npm publish
 
-      # The scoped alias: same version, depends on the exact canonical
-      # release, same binary. Needs its own trusted-publisher config.
-      - name: Publish @parkviewlab/jonobones alias (skips when already published)
+      # jonobones' slot: this repo publishes a second name, the scoped alias
+      # @parkviewlab/jonobones (thin wrapper around the canonical package, same
+      # bin — see scripts/build-scoped-alias.mjs), so the part's optional
+      # scoped-alias step is enabled here rather than omitted. Needs its own
+      # npm trusted-publisher config, already registered at npmjs.com.
+      - name: Publish scoped alias (skips when already published)
         run: |
           VERSION=$(node -p "require('./package.json').version")
-          if npm view "@parkviewlab/jonobones@$VERSION" version >/dev/null 2>&1; then
-            echo "@parkviewlab/jonobones@$VERSION is already on the registry — skipping"
+          ALIAS="@parkviewlab/$(node -p "require('./package.json').name")"
+          if npm view "$ALIAS@$VERSION" version >/dev/null 2>&1; then
+            echo "$ALIAS@$VERSION is already published — skipping"
             exit 0
           fi
           node scripts/build-scoped-alias.mjs
           cd alias-build && npm publish
 
-  # After image + npm publish, regenerate the CHANGELOG.md section (LLM
-  # "Highlights" + the git-cliff list), commit it back to main, and create the
-  # GitHub Release. Tag-push releases only (skipped on workflow_dispatch
-  # re-publish). Language-agnostic: git-cliff + the shared Python script run via
-  # `uv run` regardless of this being a Node repo. Needs the org ANTHROPIC_API_KEY.
+  # Generate the Highlights paragraph + categorized list, commit the new
+  # CHANGELOG.md section back to main, and create the GitHub Release. Runs
+  # AFTER the target jobs so the Release page points at artifacts that already
+  # exist. Two-phase invocation of generate_changelog.py keeps the LLM call
+  # to a single round-trip even though the commit-back happens onto a fresh
+  # main checkout.
   changelog:
-    needs: [image, npm]
-    if: github.event_name == 'push'
+    needs: [gate, docker, npm]
     runs-on: ubuntu-latest
     permissions:
       contents: write   # scoped here — only this job commits CHANGELOG.md back to main
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
         with:
           fetch-depth: 0          # full history + all tags for git-cliff
+          # default ref = the tag, which is what we want for `--mode=generate`
 
       - name: Install uv
         uses: astral-sh/setup-uv@v8.1.0
@@ -135,16 +200,25 @@ jobs:
 
       - name: Generate release-body.md (LLM call happens here)
         env:
+          # Set at the ParkviewLab org level — inherited by every repo
+          # under the org. Missing key → script writes a placeholder
+          # paragraph and the release still ships.
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
           GITHUB_REF: ${{ github.ref }}
+        # `uv run --with anthropic` injects the SDK for just this invocation,
+        # without adding it to the project's dependencies. Lets this workflow
+        # snippet be identical across every ParkviewLab repo regardless of
+        # whether `anthropic` is otherwise a project dep.
         run: uv run --with anthropic python scripts/generate_changelog.py --mode=generate
 
       - name: Switch to fresh origin/main and insert into CHANGELOG.md
         run: |
+          # Stash the just-generated release body so it survives the checkout.
           cp release-body.md /tmp/release-body.md
           git fetch origin main
           git checkout origin/main
           mv /tmp/release-body.md release-body.md
+          # Re-runs only the file-manipulation half — no LLM call, no anthropic SDK needed.
           uv run python scripts/generate_changelog.py --mode=insert
 
       - name: Commit CHANGELOG.md back to main
@@ -157,6 +231,9 @@ jobs:
             exit 0
           fi
           TAG="${GITHUB_REF#refs/tags/}"
+          # [skip ci] guards against any future non-tag-triggered workflows;
+          # this release workflow only fires on `push: tags` so isn't at risk
+          # of recursing, but the marker is cheap insurance.
           git commit -m "docs(changelog): $TAG [skip ci]"
           git push origin HEAD:main
 
@@ -165,7 +242,13 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           TAG="${GITHUB_REF#refs/tags/}"
+          shopt -s globstar nullglob
+          files=()                                  # regular files only — the
+          for f in artifacts/**/*; do               # per-OS dirs are not assets
+            [[ -f "$f" ]] && files+=("$f")
+          done
           gh release create "$TAG" \
             --title "$TAG" \
             --notes-file release-body.md \
-            --target main
+            --target main \
+            "${files[@]}"
