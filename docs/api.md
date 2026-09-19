@@ -22,8 +22,8 @@ The token lives in `config.json5` and, while the daemon runs, in `lock.json`
 All errors are
 `{"error": {"code": "<machine_code>", "message": "<human text>"}}` with an
 honest HTTP status. The codes the API emits: `400 bad_request`,
-`401 unauthorized`, `403 forbidden`, `404 not_found`, `409 conflict`,
-`413 payload_too_large`, `415 unsupported_media_type`, `422 unprocessable`,
+`401 unauthorized`, `404 not_found`, `409 conflict`,
+`413 payload_too_large`, `415 unsupported_media_type`,
 `500 internal_error`. An unmatched path returns `404 not_found`
 (`"no such route"`). `5xx` responses are **masked** — the `message` is always
 the generic `"internal error"` (the real cause is logged server-side), so
@@ -202,9 +202,8 @@ full-reload, then poll from that cursor.
 
 To bootstrap a client without losing changes:
 
-1. **Open the stream first** (SSE connect, or note the current `cursor`
-   from `GET /events?cursor=0&limit=1` / `GET /status` → `events.newestId`),
-   buffering whatever arrives.
+1. **Open the stream first** (SSE connect, or note the current `cursor` from
+   `GET /status` → `events.newestId`), buffering whatever arrives.
 2. **Then snapshot** via the REST endpoints.
 3. **Then apply** the buffered/queued events on top of the snapshot.
 

@@ -49,7 +49,7 @@ jobs:
         run: npm ci
 
       - name: Install the official joplin CLI
-        run: npm install -g joplin
+        run: npm install -g joplin@3.7.1
 
       - name: Interop round-trip suite
         run: npm run test:interop
@@ -95,7 +95,7 @@ jobs:
         run: npm ci
 
       - name: Install the official joplin CLI
-        run: npm install -g joplin
+        run: npm install -g joplin@3.7.1
 
       # Cache the server image as a tarball: insulates the job from Docker
       # Hub pull rate limits and shaves the pull on every warm run.

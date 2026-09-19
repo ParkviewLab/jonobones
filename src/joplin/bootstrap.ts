@@ -155,9 +155,9 @@ export async function bootstrapJoplin({ profileDir }: BootstrapOptions): Promise
   const SyncTargetJoplinServer = req('@joplin/lib/SyncTargetJoplinServer.js').default;
   const SyncTargetJoplinCloud = req('@joplin/lib/SyncTargetJoplinCloud.js').default;
   const SyncTargetOneDrive = req('@joplin/lib/SyncTargetOneDrive.js').default;
-  const SyncTargetNextcloud = req('@joplin/lib/SyncTargetNextcloud.js');
-  const SyncTargetWebDAV = req('@joplin/lib/SyncTargetWebDAV.js');
-  const SyncTargetDropbox = req('@joplin/lib/SyncTargetDropbox.js');
+  const SyncTargetNextcloud = req('@joplin/lib/SyncTargetNextcloud.js').default;
+  const SyncTargetWebDAV = req('@joplin/lib/SyncTargetWebDAV.js').default;
+  const SyncTargetDropbox = req('@joplin/lib/SyncTargetDropbox.js').default;
   const SyncTargetAmazonS3 = req('@joplin/lib/SyncTargetAmazonS3.js');
   const FileApiDriverLocal = req('@joplin/lib/file-api-driver-local.js').default;
   const { reg } = req('@joplin/lib/registry.js');
