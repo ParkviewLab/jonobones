@@ -1,17 +1,8 @@
 name: Release
 
-# Assembled from the ParkviewLab handbook's release parts (docs/ci.md, v0.25.0):
-# head, gate, docker (renamed from this repo's old "image" job, to match the
-# part's name), npm (with the scoped-alias step this repo needs, since
-# jonobones publishes both `jonobones` and `@parkviewlab/jonobones`), and
-# changelog. The file keeps the name release.yml: npm's trusted publishers,
-# for both packages, are registered against it.
-#
-# Dropped: the workflow_dispatch "re-publish an existing tag" path and every
-# job's `inputs.tag || github.ref_name` checkout ref (added for tags cut
-# before this workflow existed, last used 2026-06-12). A release that fails
-# part-way is recovered by re-running the tag's own run's failed jobs
-# (possible for 30 days), and after that by a patch release.
+# Assembled from the ParkviewLab handbook's release parts, one for each of this
+# repository's publish targets: the gate, then the job of each target, then the
+# job that creates the GitHub Release. The recipe is in the handbook's ci.md.
 
 on:
   push:
