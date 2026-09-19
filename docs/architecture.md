@@ -38,7 +38,7 @@ src/
 
 `@joplin/lib` is published CommonJS with **no main entry and no API
 stability guarantee** — every import is a deep file path. jonobones pins an
-exact version (`3.6.3`) and quarantines every import behind
+exact version, in `package.json`, and quarantines every import behind
 `src/joplin/`. The rest of the codebase sees typed wrappers and domain
 errors, never the lib. When upstream moves: re-pin, fix `src/joplin/`,
 re-run the interop suite. Nothing else should need to change.
@@ -55,7 +55,7 @@ changed, and sync would silently skip it. Reads compose validated SELECTs
 ### Headless lib bootstrap (hard-won facts)
 
 `src/joplin/bootstrap.ts` mirrors the lib's own test bootstrap
-(`testing/test-utils.ts` + `jest.setup.js`), proven by the M0 spike
+(`testing/test-utils.ts` + `jest.setup.js`), proven by the derive spike
 (`spike/lib-spike.mjs`, kept alive as an integration test):
 
 - `shimInit` must receive `nodeSqlite` (the `sqlite3` module) — the DB
