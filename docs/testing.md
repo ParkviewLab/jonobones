@@ -21,11 +21,11 @@ tests change, this file changes in the same commit.
 
 ## Prerequisites
 
-- **Official joplin CLI** — either on `PATH` (`npm install -g joplin`)
-  or pointed at directly:
+- **Official joplin CLI**, pinned to the version CI installs (`3.7.1`) —
+  either on `PATH` (`npm install -g joplin@3.7.1`) or pointed at directly:
 
   ```sh
-  mkdir -p /tmp/joplin-cli && (cd /tmp/joplin-cli && npm install joplin)
+  mkdir -p /tmp/joplin-cli && (cd /tmp/joplin-cli && npm install joplin@3.7.1)
   export JOPLIN_CLI_BIN=/tmp/joplin-cli/node_modules/.bin/joplin
   ```
 
@@ -93,7 +93,7 @@ A real daemon (`startDaemon`, in-process) on a temp profile, exercised
 over real HTTP. Sync tests use a filesystem target in a temp dir; the
 spike script doubles as an independent second Joplin client.
 
-**lib-spike.test.ts** — the M0 derive spike, kept alive as a test:
+**lib-spike.test.ts** — the derive spike, kept alive as a test:
 - two fresh `@joplin/lib` profiles exchange a notebook + note through a
   filesystem sync target (title and Unicode body arrive intact)
 
@@ -117,8 +117,9 @@ spike script doubles as an independent second Joplin client.
   GET turns 404; writes bump `updated_time` so they sync; works on
   notebooks and tags too; inputs validated
 - resources: multipart upload echoes metadata; the downloaded blob is
-  byte-identical with content headers; list/get follow the §5.1
-  conventions; a resource linked from a note body appears under
+  byte-identical with content headers; list/get follow
+  [api.md's pagination conventions](api.md#pagination-list-endpoints); a
+  resource linked from a note body appears under
   `/notes/:id/resources`; PATCH allows `title`/`user_*` only and DELETE
   is permanent; caller-chosen ids accepted, missing `data` part → 400
 - search finds notes by body content

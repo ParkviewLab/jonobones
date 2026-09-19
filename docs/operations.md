@@ -11,9 +11,18 @@ version, same binary); `jonobones` is canonical.
 
 From a checkout: `npm ci && npm run build`, then run `bin/jonobones.js`.
 
-Releases are published automatically on every version tag: npm via
-trusted publishing (OIDC) and `ghcr.io/parkviewlab/jonobones` via the
-repo's own token — no long-lived credentials in CI.
+Releases are published on every `v*` tag that passes the release gate: npm
+via trusted publishing (OIDC) and `ghcr.io/parkviewlab/jonobones` via the
+repo's own token — no long-lived publishing credentials in CI. (The
+changelog job reads the org-level `ANTHROPIC_API_KEY` secret to draft the
+release notes; that is a scoped API key, not a publishing credential.)
+
+If a release fails part-way (one publish target succeeds, another fails,
+or the changelog step doesn't run), re-run the failed jobs of the tag's own
+workflow run from the Actions UI or `gh run rerun --failed`; each publish
+step already skips a version already on the registry, so a re-run is safe.
+GitHub keeps a workflow run re-runnable for 30 days; past that window, cut
+a patch release instead.
 
 ## Provision a profile
 
@@ -111,7 +120,7 @@ Env names: `JONOBONES_<SECTION>_<KEY>` (snake → camelCase per segment):
 | `joplinCloud` | `username`, `password` | `url`, `userContentUrl` |
 | `s3` | `bucket`, `url`, `accessKey`, `secretKey` | `region`, `forcePathStyle` |
 | `dropbox` | `auth` (use the wizard's paste-code flow) | |
-| `onedrive` | `auth` — not yet supported by the wizard | |
+| `onedrive` | `auth` — not supported by the wizard | |
 | `none` / unset | API-only daemon, no sync | |
 
 `interval` is seconds between cycles; `0` disables the timer (`POST /sync`

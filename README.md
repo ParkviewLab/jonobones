@@ -76,7 +76,7 @@ With the daemon running and a token in hand:
 TOKEN=$(node -e "console.log(require(process.env.HOME+'/.config/jonobones/default/lock.json').token)")
 
 curl -s http://127.0.0.1:26637/v1/health
-curl -sN "http://127.0.0.1:26637/v1/events?token=$TOKEN" &
+curl -sN "http://127.0.0.1:26637/v1/events?token=$TOKEN" -H 'Accept: text/event-stream' &
 # now edit a note in any other Joplin client on the same sync target and
 # watch the change event arrive after the next sync cycle.
 ```
@@ -101,7 +101,7 @@ Environment names follow `JONOBONES_<SECTION>_<KEY>`: `JONOBONES_API_PORT`,
 A note on secrets: the config file is `0600` in a `0700` profile directory.
 Joplin's end-to-end encryption protects the *sync target* copies — the local
 database is plaintext by design, in jonobones exactly as in Joplin Desktop.
-Full-disk encryption is the real wall; OS keychain support may come later.
+Full-disk encryption is the real wall.
 
 ## Documentation
 
