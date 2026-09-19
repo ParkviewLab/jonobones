@@ -21,8 +21,7 @@ tests change, this file changes in the same commit.
 
 ## Prerequisites
 
-- **Official joplin CLI**, pinned to the version CI installs (`3.7.1`) —
-  either on `PATH` (`npm install -g joplin@3.7.1`) or pointed at directly:
+- **Official joplin CLI**, pinned to the version CI installs (`3.7.1`), either on `PATH` (`npm install -g joplin@3.7.1`) or pointed at directly:
 
   ```sh
   mkdir -p /tmp/joplin-cli && (cd /tmp/joplin-cli && npm install joplin@3.7.1)

@@ -11,18 +11,9 @@ version, same binary); `jonobones` is canonical.
 
 From a checkout: `npm ci && npm run build`, then run `bin/jonobones.js`.
 
-Releases are published on every `v*` tag that passes the release gate: npm
-via trusted publishing (OIDC) and `ghcr.io/parkviewlab/jonobones` via the
-repo's own token — no long-lived publishing credentials in CI. (The
-changelog job reads the org-level `ANTHROPIC_API_KEY` secret to draft the
-release notes; that is a scoped API key, not a publishing credential.)
+Releases are published on every `v*` tag that passes the release gate: npm via trusted publishing (OIDC) and `ghcr.io/parkviewlab/jonobones` via the repo's own token, with no long-lived publishing credentials in CI. The changelog job reads the org-level `ANTHROPIC_API_KEY` secret to draft the release notes; that is an API key, not a publishing credential.
 
-If a release fails part-way (one publish target succeeds, another fails,
-or the changelog step doesn't run), re-run the failed jobs of the tag's own
-workflow run from the Actions UI or `gh run rerun --failed`; each publish
-step already skips a version already on the registry, so a re-run is safe.
-GitHub keeps a workflow run re-runnable for 30 days; past that window, cut
-a patch release instead.
+If a release fails part-way (one publish target succeeds and another fails, or the changelog job does not run), re-run the failed jobs of the tag's own workflow run, from the Actions page or with `gh run rerun <run-id> --failed`. A re-run is safe: the npm steps skip a version already on the registry, and the image job rebuilds the same commit and pushes the same tags again. GitHub keeps a run re-runnable for 30 days; after that, cut a patch release instead.
 
 ## Provision a profile
 
