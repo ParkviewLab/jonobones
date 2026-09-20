@@ -17,7 +17,7 @@ path = [
   "src/**", "tests/**", "bin/**", "scripts/**", "examples/**", "spike/**",
   ".github/**", "Dockerfile", ".dockerignore",
   "eslint.config.js", "vitest.config.ts", "vitest.e2e.config.ts",
-  "tsconfig.json", "tsconfig.build.json", "cliff.toml",
+  "tsconfig.json", "tsconfig.build.json",
   "package.json", "package-lock.json",
 ]
 precedence = "aggregate"
