@@ -1,6 +1,6 @@
 # jonobones API reference (`/v1`)
 
-Base URL: `http://127.0.0.1:26637/v1` (port configurable; loopback only).
+Base URL: `http://127.0.0.1:26637/v1` (loopback by default; the bind address is configurable via `--bind`, `api.bind`, or `JONOBONES_API_BIND` — the published container image binds `0.0.0.0`, see [operations.md](operations.md#docker)).
 `apiVersion` is `1`; the `/v1` prefix bumps only on breaking change.
 
 ## Conventions
@@ -12,10 +12,7 @@ Every endpoint except `GET /health` requires the API token:
 - `Authorization: Bearer <token>` (preferred), or
 - `?token=<token>` (exists for `EventSource`/SSE clients, accepted everywhere).
 
-Missing/wrong token → `401` with the error envelope. If no token is
-configured, every authenticated request still `401`s — a token must be set.
-The token lives in `config.json5` and, while the daemon runs, in `lock.json`
-(both `0600`).
+Missing/wrong token → `401` with the error envelope. If no token is configured, every authenticated request still `401`s — a token must be set. The token comes from `config.json5`, the `JONOBONES_API_TOKEN` environment variable, or the `--token` flag (no config file needed), and, while the daemon runs, is also readable from `lock.json` (both `0600`).
 
 ### Errors
 
@@ -31,11 +28,7 @@ don't parse it.
 
 ### Status codes (success)
 
-`200` — `GET`, `PATCH` (echoes the item), and `PUT` of a `user_data` key
-(echoes `{"value": …}`). `201` — `POST` create (items and resources). `202`
-— `POST /sync` (accepted; the sync runs in the background). `204 No Content`
-— `DELETE`, tag attach (`POST /tags/{id}/notes`) / detach, and `DELETE` of a
-`user_data` key.
+`200` — `GET`, `PATCH` (echoes the item), `PUT` of a `user_data` key (echoes `{"value": …}`), and `POST /{type}/{id}/restore` (echoes the full item). `201` — `POST` create (items and resources). `202` — `POST /sync` (accepted; the sync runs in the background). `204 No Content` — `DELETE`, tag attach (`POST /tags/{id}/notes`) / detach, and `DELETE` of a `user_data` key.
 
 ### Pagination (list endpoints)
 
@@ -66,6 +59,7 @@ it is never writable directly — see [user_data](#user_data).
   `deleted_time`, `is_conflict`, `conflict_original_id`, `type_`, and `id`
   changes. `user_created_time` / `user_updated_time` **are** writable.
 - Unknown fields → `400`.
+- Every JSON request body is capped at 1 MiB (Fastify's default; no route raises it) — a larger body → `413 payload_too_large` ("Request body is too large"). The multipart upload limit below is separate and larger.
 
 ### Trash
 

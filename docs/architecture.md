@@ -71,6 +71,8 @@ changed, and sync would silently skip it. Reads compose validated SELECTs
 
 ## Profile layout
 
+The profile root follows the rule in [operations.md](operations.md#provision-a-profile); shown below is the default location (`~/.config/jonobones/<profile>/` when `XDG_CONFIG_HOME` is unset):
+
 ```
 ~/.config/jonobones/<profile>/
 ├── config.json5      0600 — canonical config (token, sync creds, E2EE pw)

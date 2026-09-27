@@ -17,8 +17,7 @@ jonobones follows the ParkviewLab conventions. The essentials:
   (hyphen, not slash). See the handbook's `branching.md`.
 - Open a PR into **`develop`**. The repo is **squash-only**, so the merge button
   can only squash; **merging is the maintainer's action.**
-- Releases are cut from **`main`** via the CLI (`git merge --no-ff develop`, then
-  `git bump` + `git release`) — not a PR. See the handbook's `releases.md`.
+- Releases are cut from **`main`** via the CLI — not a PR. See the handbook's ["Cutting a release"](https://github.com/ParkviewLab/handbook/blob/main/docs/releases.md#cutting-a-release).
 
 ## Commit / PR-title convention (this is what the changelog reads)
 
@@ -40,7 +39,7 @@ Commit](https://www.conventionalcommits.org/) type:
 | any other title | Other changes | the whole title |
 | a commit with no pull request | Direct commits | its subject and short hash |
 
-A title without a recognised type is not dropped: it is listed whole under Other changes. So prefix your PR titles, and correct a title before the merge, since retitling afterwards does not change the commit. The groups appear in the order above, and an empty group is left out.
+A title without a recognised type is not dropped: it is listed whole under Other changes. So prefix your PR titles, and correct a title before the merge, since retitling afterwards does not change the commit. The groups appear in the order above, and an empty group is left out. A bookkeeping commit — a version bump, the changelog's own auto-commit, or a back-merge — is recognised by what it changes rather than by its title, and does not appear in any group.
 
 ## Local checks before opening a PR
 
@@ -50,14 +49,11 @@ Run the same checks CI requires, so the PR is green on arrival:
 npm ci
 npm run typecheck
 npm run lint
-npm test                 # unit + integration (vitest)
+npm test                 # unit + integration, and interop if a joplin CLI is found
 uvx --from "reuse[charset-normalizer]" reuse lint
 ```
 
-The `interop`, `docker`, and `e2e` CI tiers need Docker + the official Joplin
-CLI/Server — see [`testing.md`](testing.md) to run them locally. A PR **can't be
-merged until the required checks pass** (the CI matrix, interop, docker, e2e,
-REUSE, and the version guard — see the handbook's `ci.md`).
+See [`testing.md`](testing.md) for the full tier breakdown, prerequisites, and how to run `docker` and `e2e` locally. A PR **can't be merged until the required checks pass** (the CI matrix, interop, docker, e2e, REUSE, and the version guard — see the handbook's `ci.md`).
 
 ## Versioning
 

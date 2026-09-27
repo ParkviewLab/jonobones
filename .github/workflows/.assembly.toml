@@ -1,0 +1,5 @@
+targets = ["docker", "npm"]
+
+[[slots]]
+job = "npm"
+reason = "publishes a second name, the scoped alias @parkviewlab/jonobones (see release.yml's own comment on the step)"

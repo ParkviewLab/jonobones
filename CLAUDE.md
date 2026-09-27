@@ -1,11 +1,7 @@
 <!-- PARKVIEWLAB:BEGIN (managed by ParkviewLab/handbook — do not edit inside this block; run scripts/sync-agent-files.sh to update) -->
 # ParkviewLab conventions
 
-This repo follows the **[ParkviewLab handbook](https://github.com/ParkviewLab/handbook/tree/main)** —
-the single source of truth for how we work. These pointer files **don't re-inline** its rules:
-**read the handbook before non-trivial work**, starting with
-**[`ai-collaboration.md`](https://github.com/ParkviewLab/handbook/blob/main/docs/ai-collaboration.md)**
-(the behavioural contract). Only the safety-critical guardrails are summarized here.
+This repo follows the **[ParkviewLab handbook](https://github.com/ParkviewLab/handbook/tree/main)** — the single source of truth for how we work. These pointer files **don't re-inline** its rules: **read the handbook before non-trivial work**, starting with **[`ai-collaboration.md`](https://github.com/ParkviewLab/handbook/blob/main/docs/ai-collaboration.md)** (the behavioural contract). Only the safety-critical guardrails are summarized here.
 
 **If present, read `docs/northstar.md` before working.** It states the project's intent and is authoritative.
 

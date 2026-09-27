@@ -8,14 +8,10 @@ SPDX-License-Identifier: CC-BY-4.0
 All notable changes to jonobones are recorded here. Each release entry has two
 parts:
 
-- **Highlights** — a 2-3 sentence "what's new" paragraph generated at release
-  time by an Anthropic-API call (dev-tools' `generate-changelog`, run by the release workflow).
-- **Categorized changes** — a list of merged commits since the previous tag,
-  grouped by [Conventional Commit](https://www.conventionalcommits.org/) prefix,
-  produced by dev-tools' `generate-changelog`.
+- **Highlights** — a 2-3 sentence "what's new" paragraph generated at release time by an Anthropic-API call (dev-tools' `generate-changelog`, run by the release workflow).
+- **Categorized changes** — the release's pull requests grouped by Conventional Commit type, produced by dev-tools' `generate-changelog`; see [`docs/CONTRIBUTING.md`](docs/CONTRIBUTING.md#commit--pr-title-convention-this-is-what-the-changelog-reads) for the exact grouping rule.
 
-The release workflow on every tag push regenerates both, commits the new section
-here, and uses the same content as the GitHub Release body.
+The release workflow on every tag push generates both, commits the new section here, and uses the same content as the GitHub Release body. A re-run after a partial failure makes no second model call: it reuses the section already committed instead of regenerating it.
 
 <!--
   Keep-a-Changelog ordering: [Unreleased] at the top, then newest released
