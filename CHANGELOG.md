@@ -22,6 +22,26 @@ The release workflow on every tag push generates both, commits the new section h
 
 ## [Unreleased]
 
+## [v0.1.7] - 2026-09-27
+
+### Highlights
+
+A recreated events journal no longer silently resumes clients at unrelated events: a fresh journal's ids are now seeded far above any earlier journal could have reached, so a stale cursor gets a reset over both SSE and polling, and event ids are large integers that no longer start at 1. Documentation has been corrected across the README, operations, API, testing and contributing guides to match the code, covering the profile root, container configuration routes, the default bind and token sources, the 1 MiB request body cap, and the restore endpoint's response. The rest is maintenance: dependency advisories fixable within existing version ranges were resolved, and the release workflow and changelog generation were rebuilt on shared tooling.
+
+### Bug fixes
+
+- Npm audit fix, the advisories fixable without a major upgrade (#11)
+- A recreated events journal resets every client (#12)
+
+### Docs
+
+- Correct the documents before the release (#13)
+
+### Maintenance
+
+- Assemble the release workflow from the handbook's parts (#9)
+- Generate the changelog with dev-tools' shared script (#10)
+
 ## [v0.1.6] - 2026-09-19
 
 ### Highlights
