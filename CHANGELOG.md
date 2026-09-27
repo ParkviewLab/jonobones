@@ -22,6 +22,16 @@ The release workflow on every tag push generates both, commits the new section h
 
 ## [Unreleased]
 
+## [v0.1.8] - 2026-09-27
+
+### Highlights
+
+This release contains only internal changes to the project's CI workflows and contributor documentation, switching from squash merges and direct back-merges to merge commits and a back-merge pull request. There are no user-visible changes to the daemon itself.
+
+### Maintenance
+
+- Merge commits and the checked back-merge pull request (#14)
+
 ## [v0.1.7] - 2026-09-27
 
 ### Highlights
