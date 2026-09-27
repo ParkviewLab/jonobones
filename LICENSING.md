@@ -25,7 +25,7 @@ Full upstream attribution is in the README's "Credits & license" section.
 
 | Bucket | License | What |
 |---|---|---|
-| Source, tests, scripts, CI & build config — `src/**`, `tests/**`, `bin/**`, `scripts/**`, `.github/**`, `Dockerfile`, configs | `AGPL-3.0-or-later` | the program |
+| Source, tests, scripts, examples, spikes, CI & build config — `src/**`, `tests/**`, `bin/**`, `scripts/**`, `examples/**`, `spike/**`, `.github/**`, `Dockerfile`, configs | `AGPL-3.0-or-later` | the program |
 | Docs & repo meta — `README.md`, this file, `docs/**`, `AGENTS.md`, `CLAUDE.md`, `CHANGELOG.md` | `CC-BY-4.0` | the writing |
 
 The split is encoded in [`REUSE.toml`](REUSE.toml) and per-file SPDX headers; the root
