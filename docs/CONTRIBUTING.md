@@ -39,7 +39,7 @@ Commit](https://www.conventionalcommits.org/) type:
 | any other title | Other changes | the whole title |
 | a commit with no pull request | Direct commits | its subject and short hash |
 
-A title without a recognised type is not dropped: it is listed whole under Other changes. So prefix your PR titles, and correct a title before the merge, since retitling afterwards does not change the commit. The groups appear in the order above, and an empty group is left out.
+A title without a recognised type is not dropped: it is listed whole under Other changes. So prefix your PR titles, and correct a title before the merge, since retitling afterwards does not change the commit. The groups appear in the order above, and an empty group is left out. A bookkeeping commit — a version bump, the changelog's own auto-commit, or a back-merge — is recognised by what it changes rather than by its title, and does not appear in any group.
 
 ## Local checks before opening a PR
 
