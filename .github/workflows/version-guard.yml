@@ -1,4 +1,3 @@
-
 name: Version guard
 
 # The one required context `no-version-change`, in one job with two modes (see
