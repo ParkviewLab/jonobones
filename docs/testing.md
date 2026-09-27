@@ -7,7 +7,7 @@ proves something the tier below cannot.
 |---|---|---|---|
 | Unit | `npm test` (part of) | nothing | config precedence, pagination, lockfile, journal logic |
 | Integration | `npm test` (part of) | nothing | every `/v1` endpoint over real HTTP, SSE mechanics, sync cycles against a filesystem target |
-| Interop | `npm run test:interop` | official `joplin` CLI | byte-faithful round-trips with a stock client over a shared filesystem target, plaintext + E2EE |
+| Interop | `npm test` (part of, self-skips without the CLI) · `npm run test:interop` alone | official `joplin` CLI | byte-faithful round-trips with a stock client over a shared filesystem target, plaintext + E2EE |
 | E2E | `npm run test:e2e` | Docker (+ `joplin` CLI for 4 of 5 suites) | the whole product story through a **real Joplin Server**: sync fidelity, SSE events, E2EE, restarts, conflicts, outages — and the container image deployed as users deploy it |
 
 `npm test` never touches Docker — the e2e tier lives in its own vitest

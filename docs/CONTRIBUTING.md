@@ -49,14 +49,11 @@ Run the same checks CI requires, so the PR is green on arrival:
 npm ci
 npm run typecheck
 npm run lint
-npm test                 # unit + integration (vitest)
+npm test                 # unit + integration, and interop if a joplin CLI is found
 uvx --from "reuse[charset-normalizer]" reuse lint
 ```
 
-The `interop`, `docker`, and `e2e` CI tiers need Docker + the official Joplin
-CLI/Server — see [`testing.md`](testing.md) to run them locally. A PR **can't be
-merged until the required checks pass** (the CI matrix, interop, docker, e2e,
-REUSE, and the version guard — see the handbook's `ci.md`).
+See [`testing.md`](testing.md) for the full tier breakdown, prerequisites, and how to run `docker` and `e2e` locally. A PR **can't be merged until the required checks pass** (the CI matrix, interop, docker, e2e, REUSE, and the version guard — see the handbook's `ci.md`).
 
 ## Versioning
 
