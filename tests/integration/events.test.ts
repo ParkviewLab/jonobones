@@ -246,7 +246,9 @@ describe('sync-sourced events', () => {
 describe('/status events section', () => {
   it('reports oldest/newest journal ids', async () => {
     const res = await http('GET', '/status');
-    expect(res.body.events.oldestId).toBe(1);
-    expect(res.body.events.newestId).toBeGreaterThan(1);
+    // A freshly created journal is seeded (see journal.ts, seedFreshSequence)
+    // so ids start far above 1, not at it.
+    expect(res.body.events.oldestId).toBeGreaterThan(1_000_000_000_000);
+    expect(res.body.events.newestId).toBeGreaterThanOrEqual(res.body.events.oldestId);
   });
 });
