@@ -70,7 +70,26 @@ export class EventJournal {
     });
     const journal = new EventJournal(db);
     await journal.exec(SCHEMA);
+    await journal.seedFreshSequence();
     return journal;
+  }
+
+  // A journal is new when its `events` table has never received a row: an
+  // operator can delete `events.sqlite` while the daemon is stopped (see
+  // operations.md), and the recreated file's AUTOINCREMENT sequence would
+  // otherwise start at 1 again, indistinguishable from the ids the deleted
+  // journal already handed out to clients. Detect "new" by the absence of
+  // a `sqlite_sequence` row for `events` (SQLite adds that row on the
+  // table's first insert, not at CREATE TABLE), and seed the sequence so
+  // this journal's first id sits far above any id an earlier journal could
+  // have reached. An existing journal, whose sequence row is already
+  // there, is left exactly as it is.
+  private async seedFreshSequence(): Promise<void> {
+    const row = await this.get<{ seq: number }>('SELECT seq FROM sqlite_sequence WHERE name = ?', ['events']);
+    if (row !== undefined) return;
+    const base = Date.now() * 1000; // a safe integer, ~1.8e15, well below Number.MAX_SAFE_INTEGER
+    await this.run('INSERT INTO sqlite_sequence (name, seq) VALUES (?, ?)', ['events', base]);
+    await this.setMeta('first_id_base', String(base));
   }
 
   private exec(sql: string): Promise<void> {
@@ -131,8 +150,13 @@ export class EventJournal {
     if (cursor > newest) return false;
     if (cursor === 0) {
       // Resumable from the very beginning only if nothing was pruned yet.
+      // For a seeded journal (see seedFreshSequence) that means the oldest
+      // retained id is first_id_base + 1; for an older, unseeded journal
+      // it's still id 1.
       const oldest = await this.oldestId();
-      return oldest === null || oldest === 1;
+      if (oldest === null) return true;
+      const base = await this.getMeta('first_id_base');
+      return base === null ? oldest === 1 : oldest === Number(base) + 1;
     }
     // The cursor row itself may be pruned; what matters is that no event
     // BETWEEN cursor and now was pruned, i.e. the oldest retained id is

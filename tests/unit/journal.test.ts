@@ -2,11 +2,14 @@
 //
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import { createRequire } from 'node:module';
 import { mkdtempSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { afterEach, describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import { EventJournal, type NewEvent } from '../../src/events/journal.js';
+
+const sqlite3 = createRequire(import.meta.url)('sqlite3');
 
 let dir: string | null = null;
 let journal: EventJournal | null = null;
@@ -30,6 +33,32 @@ const ev = (n: number): NewEvent => ({
   change_type: 'update',
   source: 'api',
 });
+
+// Builds a journal file exactly as a pre-fix jonobones would have left one:
+// an `events` table with one row already inserted (so `sqlite_sequence`
+// already carries a row for it) and no `journal_meta` at all.
+function seedPreFixJournal(path: string): Promise<void> {
+  return new Promise((resolve, reject) => {
+    const db = new sqlite3.Database(path, (openErr: Error | null) => {
+      if (openErr) return reject(openErr);
+      db.exec(
+        `CREATE TABLE events (
+           id INTEGER PRIMARY KEY AUTOINCREMENT,
+           item_type TEXT NOT NULL,
+           item_id TEXT NOT NULL,
+           change_type TEXT NOT NULL,
+           source TEXT NOT NULL,
+           created_at INTEGER NOT NULL
+         );
+         INSERT INTO events (item_type, item_id, change_type, source, created_at)
+         VALUES ('note', '${'a'.repeat(32)}', 'update', 'api', 1000);`,
+        (execErr: Error | null) => {
+          db.close((closeErr: Error | null) => (execErr || closeErr ? reject(execErr ?? closeErr) : resolve()));
+        },
+      );
+    });
+  });
+}
 
 describe('EventJournal', () => {
   it('appends with increasing ids and lists after a cursor', async () => {
@@ -83,5 +112,76 @@ describe('EventJournal', () => {
     await j.replaceKnownIds('note', ['b', 'c']);
     expect(await j.knownIds('note')).toEqual(new Set(['b', 'c']));
     expect(await j.knownIds('tag')).toEqual(new Set(['t']));
+  });
+
+  it('seeds a fresh journal far above a safe-integer floor, ids increasing by one', async () => {
+    const j = await open();
+    const a = await j.append(ev(1));
+    const b = await j.append(ev(2));
+    expect(Number.isSafeInteger(a.id)).toBe(true);
+    expect(Number.isSafeInteger(b.id)).toBe(true);
+    expect(b.id).toBe(a.id + 1);
+    // Date.now() * 1000 is on the order of 1.8e15; a pre-fix journal could
+    // never have reached anywhere near that many rows.
+    expect(a.id).toBeGreaterThan(1_000_000_000_000);
+    expect(await j.getMeta('first_id_base')).toBe(String(a.id - 1));
+  });
+
+  it('cursor 0 is resumable on a fresh (seeded) journal until something is pruned', async () => {
+    const j = await open();
+    expect(await j.isResumable(0)).toBe(true); // empty
+
+    const old = await j.append(ev(1), 1_000); // ancient
+    await j.append(ev(2), Date.now());
+    expect(await j.isResumable(0)).toBe(true); // nothing pruned yet
+
+    const pruned = await j.pruneOlderThan(2_000);
+    expect(pruned).toBe(1);
+    expect(await j.isResumable(0)).toBe(false); // the oldest retained id moved past the seeded base + 1
+
+    // The cursor sitting right at the pruned event is still fine, per the
+    // existing (unrelated to cursor 0) branch of isResumable.
+    expect(await j.isResumable(old.id)).toBe(true);
+  });
+
+  it('an existing (unseeded) journal keeps numbering from 1, untouched by the fix', async () => {
+    dir = mkdtempSync(join(tmpdir(), 'jonobones-journal-test-'));
+    const path = join(dir, 'events.sqlite');
+    await seedPreFixJournal(path); // one event already at id 1, as a pre-fix journal would have
+
+    journal = await EventJournal.open(path);
+    expect(await journal.getMeta('first_id_base')).toBeNull();
+    expect(await journal.oldestId()).toBe(1);
+
+    const next = await journal.append(ev(2));
+    expect(next.id).toBe(2);
+    expect(await journal.isResumable(0)).toBe(true);
+    expect(await journal.isResumable(1)).toBe(true);
+  });
+
+  it('a journal recreated after deletion is seeded far above the old one, resetting a stale cursor', async () => {
+    dir = mkdtempSync(join(tmpdir(), 'jonobones-journal-test-'));
+    const path = join(dir, 'events.sqlite');
+    const nowSpy = vi.spyOn(Date, 'now');
+
+    try {
+      nowSpy.mockReturnValue(1_700_000_000_000); // the old journal's moment
+      let j = await EventJournal.open(path);
+      for (let i = 1; i <= 5; i++) await j.append(ev(i));
+      const staleCursor = (await j.newestId())!;
+      await j.close();
+
+      rmSync(path); // "an operator deletes the journal file while the daemon is stopped"
+
+      nowSpy.mockReturnValue(1_700_000_000_001); // recreated a moment later
+      journal = j = await EventJournal.open(path);
+      for (let i = 6; i <= 13; i++) await j.append(ev(i)); // 8 new events, as reproduced
+
+      // Reproduced fault: the old code let this resolve to true and served
+      // ids 6..8 of the *new* journal as if they continued the old one.
+      expect(await j.isResumable(staleCursor)).toBe(false);
+    } finally {
+      nowSpy.mockRestore();
+    }
   });
 });

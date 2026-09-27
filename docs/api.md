@@ -171,26 +171,15 @@ stay inside it.
 curl -N "http://127.0.0.1:26637/v1/events?token=$TOKEN" -H 'Accept: text/event-stream'
 ```
 
-- Each change is `event: change` with `id: <journal id>` and `data:`
-  `{"id":N,"item_type":"note|notebook|tag|resource","item_id":"…","change_type":"create|update|delete","source":"api|sync"}`
-- Events are **thin**: re-fetch the item for its current state. Trash and
-  restore are `update`s; only permanent deletion is `delete`. A `404` on
-  re-fetch after an `update` just means it changed again — keep following
-  the stream.
+- Each change is `event: change` with `id: <journal id>` and `data:` `{"id":N,"item_type":"note|notebook|tag|resource","item_id":"…","change_type":"create|update|delete","source":"api|sync"}`. Ids are large integers seeded from a per-journal base, not from 1 — treat an id as an opaque, strictly increasing cursor value, never as a count or as close to 1.
+- Events are **thin**: re-fetch the item for its current state. Trash and restore are `update`s; only permanent deletion is `delete`. A `404` on re-fetch after an `update` just means it changed again — keep following the stream.
 - Heartbeat comment (`: ping`) every ~30 s.
-- Reconnect with `Last-Event-ID` (standard `EventSource` behavior) — missed
-  events replay from the journal.
-- If your cursor is older than the journal's retention (default 30 days)
-  or otherwise unknown, you get `event: reset` with
-  `data: {"resumeFrom": N}`: **full-reload** your state via REST, then
-  continue from `N`.
+- Reconnect with `Last-Event-ID` (standard `EventSource` behavior) — missed events replay from the journal.
+- A cursor is resumable only if every event after it is still retained in the journal you're talking to: it's within the retention window (default 30 days), and it isn't from a journal that no longer exists — deleting `events.sqlite` while the daemon is stopped (see [operations.md](operations.md#troubleshooting)) starts the next one on a fresh, unrelated id base, so every older cursor fails this test. A non-resumable cursor gets `event: reset` with `data: {"resumeFrom": N}`: **full-reload** your state via REST, then continue from `N`.
 
 ### JSON polling (anything else)
 
-`GET /events?cursor=N&limit=…` → `{"items":[…],"cursor":M,"has_more":bool}`.
-Poll with the returned `cursor`. A non-resumable cursor returns
-`{"reset":true,"cursor":<current newest>,"items":[],"has_more":false}` —
-full-reload, then poll from that cursor.
+`GET /events?cursor=N&limit=…` → `{"items":[…],"cursor":M,"has_more":bool}`. Poll with the returned `cursor`. A non-resumable cursor (the same test as for SSE, above) returns `{"reset":true,"cursor":<current newest>,"items":[],"has_more":false}` — full-reload, then poll from that cursor.
 
 ### The snapshot race (read this once)
 
