@@ -39,9 +39,7 @@ curl http://127.0.0.1:26637/v1/health
 # {"app":"jonobones","version":"…","apiVersion":1}
 ```
 
-Or run the published container image instead — configuration comes in
-entirely through `JONOBONES_*` environment variables, and the profile
-lives in the `/data` volume:
+Or run the published container image instead — configure it via `JONOBONES_*` environment variables or a `config.json5` in `/data`, where the profile lives:
 
 ```sh
 docker run -d --name jonobones \
@@ -73,7 +71,8 @@ Run it under your service manager with `jonobones service install`
 With the daemon running and a token in hand:
 
 ```sh
-TOKEN=$(node -e "console.log(require(process.env.HOME+'/.config/jonobones/default/lock.json').token)")
+CONFIG_ROOT=${XDG_CONFIG_HOME:-$HOME/.config}
+TOKEN=$(node -e "console.log(require('$CONFIG_ROOT/jonobones/default/lock.json').token)")
 
 curl -s http://127.0.0.1:26637/v1/health
 curl -sN "http://127.0.0.1:26637/v1/events?token=$TOKEN" -H 'Accept: text/event-stream' &
@@ -83,9 +82,7 @@ curl -sN "http://127.0.0.1:26637/v1/events?token=$TOKEN" -H 'Accept: text/event-
 
 ## Configuration
 
-A profile lives at `~/.config/jonobones/<name>/` (default profile:
-`default`). Its `config.json5` is canonical; environment variables and CLI
-flags override it (flags > env > config > defaults):
+A profile lives under the profile root — see [docs/operations.md](docs/operations.md#provision-a-profile) for exactly where (default profile: `default`). Its `config.json5` is canonical; environment variables and CLI flags override it (flags > env > config > defaults):
 
 ```json5
 {

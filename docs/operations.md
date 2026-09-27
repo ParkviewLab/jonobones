@@ -27,9 +27,7 @@ and collects credentials → **tests connectivity** → runs the **first sync**
 end-to-end encryption on the target and verifies the master password →
 generates the API token and writes `config.json5` (0600).
 
-Profiles live at `~/.config/jonobones/<name>/` (or any path you pass).
-One daemon per profile; a second `start` prints "already running" and
-exits 0.
+Profiles live under the profile root: `$XDG_CONFIG_HOME/jonobones/<name>/` when `XDG_CONFIG_HOME` is set, `~/.config/jonobones/<name>/` otherwise (`--profile` also accepts any path you pass, in place of a bare name). One daemon per profile; a second `start` prints "already running" and exits 0.
 
 ## Run
 
@@ -150,5 +148,4 @@ target as the canonical replica and treat profiles as disposable: a fresh
   `jonobones status` shows it.
 - **Events `reset`** — your cursor predates the retention window; re-sync
   state via REST per the snapshot-race recipe in [api.md](api.md#events).
-- The journal (`events.sqlite`) is jonobones' own and can be deleted while
-  stopped — clients will get a `reset`; the knowledge base is untouched.
+- The journal (`events.sqlite`) is jonobones' own and can be deleted while stopped — the knowledge base is untouched. The recreated journal's ids start from a fresh, unrelated base (see [api.md](api.md#events)), so every client whose cursor came from the deleted journal gets a `reset` on its next request and must full-reload its state per the snapshot-race recipe.

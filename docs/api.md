@@ -1,6 +1,6 @@
 # jonobones API reference (`/v1`)
 
-Base URL: `http://127.0.0.1:26637/v1` (port configurable; loopback only).
+Base URL: `http://127.0.0.1:26637/v1` (loopback by default; the bind address is configurable via `--bind`, `api.bind`, or `JONOBONES_API_BIND` — the published container image binds `0.0.0.0`, see [operations.md](operations.md#docker)).
 `apiVersion` is `1`; the `/v1` prefix bumps only on breaking change.
 
 ## Conventions
@@ -12,10 +12,7 @@ Every endpoint except `GET /health` requires the API token:
 - `Authorization: Bearer <token>` (preferred), or
 - `?token=<token>` (exists for `EventSource`/SSE clients, accepted everywhere).
 
-Missing/wrong token → `401` with the error envelope. If no token is
-configured, every authenticated request still `401`s — a token must be set.
-The token lives in `config.json5` and, while the daemon runs, in `lock.json`
-(both `0600`).
+Missing/wrong token → `401` with the error envelope. If no token is configured, every authenticated request still `401`s — a token must be set. The token comes from `config.json5`, the `JONOBONES_API_TOKEN` environment variable, or the `--token` flag (no config file needed), and, while the daemon runs, is also readable from `lock.json` (both `0600`).
 
 ### Errors
 
@@ -31,11 +28,7 @@ don't parse it.
 
 ### Status codes (success)
 
-`200` — `GET`, `PATCH` (echoes the item), and `PUT` of a `user_data` key
-(echoes `{"value": …}`). `201` — `POST` create (items and resources). `202`
-— `POST /sync` (accepted; the sync runs in the background). `204 No Content`
-— `DELETE`, tag attach (`POST /tags/{id}/notes`) / detach, and `DELETE` of a
-`user_data` key.
+`200` — `GET`, `PATCH` (echoes the item), `PUT` of a `user_data` key (echoes `{"value": …}`), and `POST /{type}/{id}/restore` (echoes the full item). `201` — `POST` create (items and resources). `202` — `POST /sync` (accepted; the sync runs in the background). `204 No Content` — `DELETE`, tag attach (`POST /tags/{id}/notes`) / detach, and `DELETE` of a `user_data` key.
 
 ### Pagination (list endpoints)
 
@@ -66,6 +59,7 @@ it is never writable directly — see [user_data](#user_data).
   `deleted_time`, `is_conflict`, `conflict_original_id`, `type_`, and `id`
   changes. `user_created_time` / `user_updated_time` **are** writable.
 - Unknown fields → `400`.
+- Every JSON request body is capped at 1 MiB (Fastify's default; no route raises it) — a larger body → `413 payload_too_large` ("Request body is too large"). The multipart upload limit below is separate and larger.
 
 ### Trash
 
@@ -177,26 +171,15 @@ stay inside it.
 curl -N "http://127.0.0.1:26637/v1/events?token=$TOKEN" -H 'Accept: text/event-stream'
 ```
 
-- Each change is `event: change` with `id: <journal id>` and `data:`
-  `{"id":N,"item_type":"note|notebook|tag|resource","item_id":"…","change_type":"create|update|delete","source":"api|sync"}`
-- Events are **thin**: re-fetch the item for its current state. Trash and
-  restore are `update`s; only permanent deletion is `delete`. A `404` on
-  re-fetch after an `update` just means it changed again — keep following
-  the stream.
+- Each change is `event: change` with `id: <journal id>` and `data:` `{"id":N,"item_type":"note|notebook|tag|resource","item_id":"…","change_type":"create|update|delete","source":"api|sync"}`. Ids are large integers seeded from a per-journal base, not from 1 — treat an id as an opaque, strictly increasing cursor value, never as a count or as close to 1.
+- Events are **thin**: re-fetch the item for its current state. Trash and restore are `update`s; only permanent deletion is `delete`. A `404` on re-fetch after an `update` just means it changed again — keep following the stream.
 - Heartbeat comment (`: ping`) every ~30 s.
-- Reconnect with `Last-Event-ID` (standard `EventSource` behavior) — missed
-  events replay from the journal.
-- If your cursor is older than the journal's retention (default 30 days)
-  or otherwise unknown, you get `event: reset` with
-  `data: {"resumeFrom": N}`: **full-reload** your state via REST, then
-  continue from `N`.
+- Reconnect with `Last-Event-ID` (standard `EventSource` behavior) — missed events replay from the journal.
+- A cursor is resumable only if every event after it is still retained in the journal you're talking to: it's within the retention window (default 30 days), and it isn't from a journal that no longer exists — deleting `events.sqlite` while the daemon is stopped (see [operations.md](operations.md#troubleshooting)) starts the next one on a fresh, unrelated id base, so every older cursor fails this test. A non-resumable cursor gets `event: reset` with `data: {"resumeFrom": N}`: **full-reload** your state via REST, then continue from `N`.
 
 ### JSON polling (anything else)
 
-`GET /events?cursor=N&limit=…` → `{"items":[…],"cursor":M,"has_more":bool}`.
-Poll with the returned `cursor`. A non-resumable cursor returns
-`{"reset":true,"cursor":<current newest>,"items":[],"has_more":false}` —
-full-reload, then poll from that cursor.
+`GET /events?cursor=N&limit=…` → `{"items":[…],"cursor":M,"has_more":bool}`. Poll with the returned `cursor`. A non-resumable cursor (the same test as for SSE, above) returns `{"reset":true,"cursor":<current newest>,"items":[],"has_more":false}` — full-reload, then poll from that cursor.
 
 ### The snapshot race (read this once)
 
