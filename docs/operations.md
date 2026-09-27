@@ -148,4 +148,5 @@ target as the canonical replica and treat profiles as disposable: a fresh
   `jonobones status` shows it.
 - **Events `reset`** — your cursor predates the retention window; re-sync
   state via REST per the snapshot-race recipe in [api.md](api.md#events).
-- The journal (`events.sqlite`) is jonobones' own and can be deleted while stopped; the knowledge base is untouched. This does **not** reliably reset existing clients (see [api.md](api.md#journal-deletion-and-resumability)): after deleting the journal, have every client do a full reload before it resumes polling or reconnects.
+- The journal (`events.sqlite`) is jonobones' own and can be deleted while
+  stopped — clients will get a `reset`; the knowledge base is untouched.

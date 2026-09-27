@@ -192,10 +192,6 @@ Poll with the returned `cursor`. A non-resumable cursor returns
 `{"reset":true,"cursor":<current newest>,"items":[],"has_more":false}` —
 full-reload, then poll from that cursor.
 
-### Journal deletion and resumability
-
-Resumability is judged by id continuity, not by a journal generation: if the operator deletes `events.sqlite` and it is recreated (see [operations.md](operations.md#troubleshooting)), events renumber from 1, and a cursor that happens to be at or below the new journal's newest id resumes — over SSE and JSON polling alike — silently at unrelated ids instead of triggering `reset`.
-
 ### The snapshot race (read this once)
 
 To bootstrap a client without losing changes:
