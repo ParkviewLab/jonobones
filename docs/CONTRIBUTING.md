@@ -17,8 +17,7 @@ jonobones follows the ParkviewLab conventions. The essentials:
   (hyphen, not slash). See the handbook's `branching.md`.
 - Open a PR into **`develop`**. The repo is **squash-only**, so the merge button
   can only squash; **merging is the maintainer's action.**
-- Releases are cut from **`main`** via the CLI (`git merge --no-ff develop`, then
-  `git bump` + `git release`) — not a PR. See the handbook's `releases.md`.
+- Releases are cut from **`main`** via the CLI — not a PR. See the handbook's ["Cutting a release"](https://github.com/ParkviewLab/handbook/blob/main/docs/releases.md#cutting-a-release).
 
 ## Commit / PR-title convention (this is what the changelog reads)
 
