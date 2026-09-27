@@ -39,9 +39,7 @@ curl http://127.0.0.1:26637/v1/health
 # {"app":"jonobones","version":"…","apiVersion":1}
 ```
 
-Or run the published container image instead — configuration comes in
-entirely through `JONOBONES_*` environment variables, and the profile
-lives in the `/data` volume:
+Or run the published container image instead — configure it via `JONOBONES_*` environment variables or a `config.json5` in `/data`, where the profile lives:
 
 ```sh
 docker run -d --name jonobones \
