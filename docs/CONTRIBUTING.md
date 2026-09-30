@@ -51,7 +51,7 @@ npm test                 # unit + integration, and interop if a joplin CLI is fo
 uvx --from "reuse[charset-normalizer]" reuse lint
 ```
 
-See [`testing.md`](testing.md) for the full tier breakdown, prerequisites, and how to run `docker` and `e2e` locally. A PR **can't be merged until the required checks pass** (the CI matrix, interop, docker, e2e, REUSE, and the version guard — see the handbook's `ci.md`).
+See [`testing.md`](testing.md) for the full tier breakdown, prerequisites, and how to run `docker` and `e2e` locally. A PR **can't be merged until the required checks pass on a branch up to date with `develop`** (the CI matrix, interop, docker, e2e, REUSE, and the version guard — see the handbook's `ci.md`); administrators are bound too.
 
 ## Versioning
 
