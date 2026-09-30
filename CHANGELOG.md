@@ -22,6 +22,20 @@ The release workflow on every tag push generates both, commits the new section h
 
 ## [Unreleased]
 
+## [v0.1.9] - 2026-09-30
+
+### Highlights
+
+This release contains documentation and repository-maintenance changes only, with no code or behaviour changes. The testing, API, operations and contributing docs were brought up to date: the API documentation now correctly states that `jonobones start` refuses to start without a configured token (`config error: no API token configured`, exit 1) rather than serving 401s, the testing docs list the journal-seeding unit tests and `journal-recreation.test.ts`, the operations docs explain that a release re-run requires a go-ahead and runs the tagged commit so fixes need a prompt patch release, and the contributing docs note that required checks are strict and apply to administrators. The agent pointer files were also aligned with handbook v2.1.0.
+
+### Docs
+
+- Bring testing, api, operations and CONTRIBUTING current before 0.1.9 (#17)
+
+### Maintenance
+
+- Align with handbook v2.1.0 (#16)
+
 ## [v0.1.8] - 2026-09-27
 
 ### Highlights
