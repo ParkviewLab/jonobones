@@ -62,6 +62,10 @@ Pure logic, no daemon, no network.
 - prunes by age and reports cursor resumability honestly
 - empty journal: cursor 0 is resumable, anything else is not
 - persists metadata and known-id snapshots (the delete-reconciliation state)
+- a fresh journal is seeded far above a safe-integer floor, ids increasing by one
+- cursor 0 is resumable on a fresh (seeded) journal until something is pruned
+- an existing (unseeded) journal keeps numbering from 1
+- a journal recreated after deletion is seeded far above the old one, resetting a stale cursor
 
 **api.test.ts** — server shell without a database:
 - `GET /v1/health` responds without auth with `app`/`version`/`apiVersion`
@@ -144,6 +148,10 @@ spike script doubles as an independent second Joplin client.
 - deleting the peer's item file from the target → next sync emits
   `delete` with `source: 'sync'` (known-id reconciliation) and the note 404s
 - `/status` reports the journal's `oldestId`/`newestId`
+
+**journal-recreation.test.ts** — a journal deleted and recreated while the
+daemon is stopped:
+- resets, over polling, a client whose cursor came from the deleted journal
 
 ## Interop tier — `tests/interop/`
 
