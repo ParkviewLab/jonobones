@@ -12,7 +12,7 @@ Every endpoint except `GET /health` requires the API token:
 - `Authorization: Bearer <token>` (preferred), or
 - `?token=<token>` (exists for `EventSource`/SSE clients, accepted everywhere).
 
-Missing/wrong token → `401` with the error envelope. If no token is configured, every authenticated request still `401`s — a token must be set. The token comes from `config.json5`, the `JONOBONES_API_TOKEN` environment variable, or the `--token` flag (no config file needed), and, while the daemon runs, is also readable from `lock.json` (both `0600`).
+Missing/wrong token → `401` with the error envelope. If no token is configured, `jonobones start` refuses to start: it prints `config error: no API token configured` and exits 1. The token comes from `config.json5`, the `JONOBONES_API_TOKEN` environment variable, or the `--token` flag (no config file needed), and, while the daemon runs, is also readable from `lock.json` (both `0600`).
 
 ### Errors
 
